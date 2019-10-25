@@ -1,0 +1,76 @@
+<template>
+  <div class="menu">
+    <div v-for="menu in menuList" :key="menu.a">
+      <h4><i :class="['icon', menu.c]"></i>{{menu.a}}</h4>
+      <router-link v-for="item in menu.b" :key="item.a" :to="item.l">{{item.a}}</router-link>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+.menu {
+	width: 152px;
+	background: #fff;
+	padding-bottom: 15px;
+	display: inline-block;
+	vertical-align: top;
+	h4 {
+		font-size: 16px;
+		height: 50px;
+		line-height: 50px;
+		padding-left: 46px;
+		position: relative;
+		i {
+			display: block;
+			position: absolute;
+			top: 14px;
+			left: 17px;
+		}
+	}
+	a {
+		height: 42px;
+		line-height: 42px;
+		padding-left: 45px;
+		font-size: 14px;
+		color: #666;
+		display: block;
+		&.router-link-exact-active.router-link-active {
+			background-color: #eaf8ff;
+			border-left: 2px solid #0086e4;
+			padding-left: 44px;
+			color: #0086e4;
+		}
+	}
+}
+</style>
+
+<script>
+export default {
+	data() {
+		return {
+			menuList: [
+				{
+					a: '订单管理',
+					b: [{a: '全部订单', l: {path: '/order'}}, {a: '补价单', l: {path: '/order/supply'}}, {a: '问题单', l: {path: '/order/problem'}}, {a: '挂起单', l: {path: '/order', query: {type: 'HuOrder'}}}, {a: '取消单', l: {path: '/order', query: {type: 'ExOrder'}}}, {a: '附加费', l: {path: '/order/additional'}}],
+					c: 'icon-order'
+				},
+				{
+					a: '维权中心',
+					b: [{a: '退款管理', l: {path: '/droit'}}, {a: '投诉管理', l: {path: '/droit/complain'}},{a: '我要报案', l: {path: '/droit/insure'}}],
+					c: 'icon-droit'
+				},
+				{
+					a: '结算中心',
+					b: [{a: '我的钱包', l: {path: '/settle'}}, {a: '报表管理', l: {path: '/settle/report'}},{a: '钱包密码', l: {path: '/settle/walletpwd'}},{a: '现金劵', l: {path:'/settle/coupon'}},{a: '赔付金', l: {path:'/settle/claim'}}],
+					// b: [{a: '我的钱包', l: {path: '/settle'}}, {a: '报表管理', l: {path: '/settle/report'}},{a: '钱包密码', l: {path: '/settle/walletpwd'}},{a: '账户绑定', l: {path:'/settle/account'}},{a: '现金劵', l: {path:'/settle/coupon'}},{a: '赔付金', l: {path:'/settle/claim'}}],
+					c: 'icon-settlement'
+				},
+				{
+					a: '个人中心',
+					b: [{a: '个人资料', l: {path: '/personal', query: {id: this.$store.state.userCtx.linkIdentity.id}}}, {a: '密码修改', l: {path: '/personal/updpwd'}}, {a: '收藏师傅', l: {path: '/personal/favorites'}}, {a: '帮助中心', l: {path: '/personal/problem'}}],
+					c: 'icon-center'
+				}
+			]
+		};
+	}
+};
+</script>

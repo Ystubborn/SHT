@@ -1,0 +1,382 @@
+<template>
+  <div>
+    <BreadCrumb :data="crumb"></BreadCrumb>
+    <div class="w block-center recharge">
+      <div class="banner">账户余额：<span class="color-red">{{this.$route.query.price}}</span>元</div>
+      <div class="sologon color-gray">
+        <p class="color-black">温馨提示：</p>
+        <p>1.受银行处理时间影响，采用线下汇款方式到账会有延误，<span class="color-red">强烈建议采用支付宝、微信实时到账</span>。</p>
+        <p>2.线下汇款直接向左右手专属账户汇款，系统会根据您提交的汇款信息跟实际银行信息进行审核。各种方式的到账时间一般为：招行1-2天，跨行3-5天（具体到账时间以银行的实际到账时间为准）。</p>
+      </div>
+      <el-form label-width="100px" label-position="left">
+        <el-form-item label="充值金额：">
+          <el-input type="text" v-model="fmoney"></el-input>　元
+        </el-form-item>
+        <el-form-item v-show="paytype!='Downline'" label-width="0">
+          <Radio class="recharge-item" v-model="fmoney">
+            <div v-for="item in rechargeData" :key="item.fid" :value="item.fmoney">{{item.fmoney}}元<i v-if="!comm.IsNullOrEmpty(item.fitems)&&item.fitems.find(o=>{return o.frechargetype=='rechargetype_02'})!=null">送{{comm.Odefault(item.fitems.find(o=>{return o.frechargetype=='rechargetype_02'}),'fvalue','-')}}金币</i>
+              <p v-if="!comm.IsNullOrEmpty(item.fitems)">送{{comm.Odefault(item.fitems.find(o=>{return o.frechargetype=='rechargetype_01'}),'fvalue','-')}}现金券</p>
+            </div>
+          </Radio>
+        </el-form-item>
+        <el-form-item label="支付方式：">
+          <Radio type="border" class="paytype-item" v-model="paytype">
+            <div v-for="item in paytypeList" :key="item.a" :value="item.a"></div>
+          </Radio>
+        </el-form-item>
+        <el-form-item label="备注：">
+          <el-input :maxlength="200" type="textarea" v-model="fdescription"></el-input>
+        </el-form-item>
+        <el-form-item label="凭证：" v-if="fimageVisible">
+          <Upload :limit="3" v-model="fimage"></Upload>
+          <p class="color-red">上传打款凭证，有利于客服更快审核通过</p>
+        </el-form-item>
+      </el-form>
+      <div class="pay-button-panel">
+        <button class="pay-button-one" @click="opClick('confirmPay')">{{paytype=='Downline'?'提交':'确认支付'}}</button>
+        <button class="pay-button-two" @click="opClick('goBack')">暂不支付，返回上一步</button>
+      </div>
+      <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="700px" center :before-close="opClick('payClose')">
+        <div class="wechatpay">
+          <div class="code">
+            <div ref="qrcode" class="qrcode"></div>
+            <p>打开微信扫一扫</p>
+          </div>
+        </div>
+      </el-dialog>
+    </div>
+  </div>
+</template>
+
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Upload from '../../../components/upload';
+import Radio from '../../../components/radio';
+import QRCode from 'qrcodejs2';
+export default {
+	data() {
+		return {
+			crumb: [{a: '我的钱包', b: {path: '/settle'}}, {a: '账户充值'}],
+			dialogVisible: false,
+			paytype: 'Alipay',
+			dialogTitle: '微信支付',
+			paytypeList: [{a: 'Alipay', b: '支付宝'}, {a: 'WeChat', b: '微信支付'}, {a: 'Downline', b: '线下汇款'}],
+			settimer: true,
+			history: {path: '/settle'},
+			fmoney: 0,
+			fdescription: '',
+			fimage: '',
+			fimageVisible: !1,
+			rechargeData: [{fid: '1', fmoney: 10000}, {fid: '2', fmoney: 50000}, {fid: '3', fmoney: 70000}, {fid: '4', fmoney: 100000}]
+		};
+	},
+	mounted() {
+		this.detail = this.$route.query || {};
+		if (this.$store.state.userCtx.isPlatform) {
+			this.axios.post('/bill/ydj_rechargediscount?operationno=getrechargediscount', {simpleData: {fdealerid: this.$store.state.userCtx.linkIdentity.id}, loadingOption: {target: '.element-loading'}}).then(res => {
+				this.rechargeData = res.data.operationResult.srvData;
+			});
+		}
+	},
+	methods: {
+		paySuccess(id) {
+			let t = this;
+			setTimeout(function() {
+				if (!t.settimer) {
+					return;
+				}
+				t.axios.post('/bill/coo_incomedisburse?operationno=checkispaysuccess', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: id}]}).then(res => {
+					if (res.data.operationResult.srvData.isPaySuccess !== true) {
+						t.paySuccess(id);
+					} else {
+						t.$router.push(t.history);
+					}
+				});
+			}, 2000);
+		},
+		opClick(type, data) {
+			let t = this;
+			switch (type) {
+				case 'payChange':
+					t.paytype = data.a;
+					t.dialogTitle = data.b;
+					break;
+				case 'payClose':
+					t.settimer = !1;
+					break;
+				case 'confirmPay':
+					let reg = /^\d+(\.\d{0,2})?$/;
+					if (!reg.test(t.fmoney)) {
+						t.$message({
+							message: '非法的充值金额',
+							type: 'warning'
+						});
+						return false;
+					}
+					if (t.fmoney < 0.01) {
+						t.$message({
+							message: '充值金额不能小于0.01元',
+							type: 'warning'
+						});
+						return false;
+					}
+					if (t.paytype === 'Downline') {
+						let billData = [
+							{
+								fmoney: t.fmoney,
+								fdate: t.comm.DateToString(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+								fusagetype: {
+									id: 'settleaccount_type_01',
+									fnumber: 'settleaccount_type_01',
+									fname: ''
+								},
+								fway: {
+									fenumitem: '线下支付',
+									id: 'payway_04',
+									fnumber: '线下支付',
+									fname: '线下支付'
+								},
+								fdescription: t.fdescription,
+								fimage: t.fimage
+							}
+						];
+						let param = {
+							loadingOption: {
+								target: '.sht_inpour_content',
+								text: '正在充值……'
+							},
+							billData: JSON.stringify(billData),
+							simpleData: {
+								fsourceformid: 'ydj_customer',
+								fsourceid: t.$store.state.userCtx.linkIdentity.id
+							}
+						};
+						//发送请求
+						t.axios
+							.post('/dynamic/coo_inpourdialog?operationno=Recharge', param)
+							.then(res => {
+								if (res.data.operationResult.isSuccess) {
+									t.$alert('充值成功，等待客服确认，确认后您的余额将会发生变化！', '充值成功！', {
+										confirmButtonText: '确定',
+										callback: () => {
+											t.$router.push({path: '/settle'});
+										}
+									});
+								}
+							})
+							.catch(error => {});
+						return;
+					}
+					if (t.paytype === 'WeChat') {
+						this.dialogVisible = !0;
+					}
+					let rechargeid = t.comm.Odefault(
+						t.rechargeData.find(o => {
+							return o.fmoney == t.fmoney;
+						}),
+						'fid'
+					);
+					if(!this.$store.state.userCtx.isPlatform)
+					{
+						rechargeid="";
+					}
+					t.axios.post('/bill/ydj_customer?operationno=onlinerecharge', {loadingOption: {target: '.element-loading'}, simpleData: {fpaymethod: t.paytype, frechargemoney: t.fmoney, frechargeid: rechargeid}, selectedRows: [{pkValue: t.$store.state.userCtx.linkIdentity.id}]}).then(res => {
+						let srvData = res.data.operationResult.srvData.data;
+						if (t.paytype === 'Alipay') {
+							localStorage.setItem('Alipay', JSON.stringify(t.history));
+							//支付宝支付最终回调地址 /payback
+							window.location.href = srvData;
+							return;
+						}
+						if (t.paytype === 'WeChat') {
+							this.$refs.qrcode.innerHTML = '';
+							let a = res.data.operationResult.srvData;
+							new QRCode(this.$refs.qrcode, {
+								width: 200,
+								height: 200, // 高度
+								text: a.data // 二维码内容
+							});
+							t.settimer = !0;
+							t.paySuccess(a.incomedisburseId);
+						}
+					});
+					break;
+				case 'goBack':
+					t.$router.push(t.history);
+					break;
+				default:
+					break;
+			}
+		}
+	},
+	beforeRouteEnter(to, from, next) {
+		next(v => {
+			if (from.path !== '/') {
+				//v.history= from;  Cannot assign to read only property 'path' of object '#<Object>'
+				v.history = {path: from.path, name: from.name, params: v.comm.IsNullOrEmpty(from.params) ? {tab: v.$store.state.pageStatus.orderTab} : from.params, query: from.query};
+			}
+		});
+	},
+	beforeDestroy() {
+		this.settimer = !1;
+	},
+	watch: {
+		paytype(v) {
+			this.fimageVisible = v === 'Downline';
+		},
+		fmoney(v) {
+			this.frechargeid = '';
+		}
+	},
+	components: {BreadCrumb, Upload, Radio}
+};
+</script>
+<style lang="scss">
+$icon:url(../../../assets/images/icon.png);
+.recharge {
+	background-color: #fff;
+	padding: 40px;
+	.el-form {
+		//width: 610px;
+		.el-input {
+			width: 280px;
+		}
+		.el-textarea {
+			width: 516px;
+		}
+	}
+	.banner {
+		height: 100px;
+		background: #fffdee;
+		border: 1px solid #edd28b;
+		font-size: 24px;
+		color: #666;
+		line-height: 100px;
+		text-indent: 30px;
+	}
+	.sologon {
+		margin-top: 15px;
+		background: #f5f5f5;
+		border: 1px solid #e8e8e8;
+		padding: 15px 30px;
+		margin-bottom: 20px;
+	}
+	.recharge-item {
+		& > * {
+			height: 66px;
+			width: 166px;
+			position: relative;
+			border: 1px solid #e8e8e8;
+			border-radius: 4px;
+			margin-right: 50px;
+			font-size: 20px;
+			padding-top: 20px;
+			text-align: center;
+			vertical-align: top;
+			i {
+				position: absolute;
+				height: 28px;
+				font-size: 12px;
+				right: 0;
+				top: 0;
+				line-height: 26px;
+				color: #fff;
+				&::before {
+					background-image: $icon;
+					background-position: -341px 0;
+					content: '';
+					width: 80px;
+					height: 28px;
+					display: block;
+					position: absolute;
+					right: -1px;
+					top: -1px;
+				}
+			}
+			p {
+				font-size: 12px;
+				line-height: 20px;
+				color: #ff313b;
+			}
+
+			&.is-active {
+				border-color: #ff313b;
+			}
+		}
+	}
+
+	.paytype-item {
+		& > * {
+			width: 154px;
+			height: 44px;
+			border-radius: 4px;
+			border: 1px solid #e8e8e8;
+			display: inline-block;
+			margin-right: 24px;
+			background-image: $icon;
+			&:nth-child(1) {
+				background-position: -146px -180px;
+			}
+			&:nth-child(2) {
+				background-position: -310px -180px;
+			}
+			&:nth-child(3) {
+				background-position: -474px -180px;
+			}
+			&.check {
+				border-color: #409eff;
+				position: relative;
+			}
+			&.is-active {
+				border-color: #409eff;
+			}
+		}
+	}
+
+	.pay-button-panel {
+		padding-left: 100px;
+		padding-top: 40px;
+		.pay-button-one {
+			border: none;
+			cursor: pointer;
+			border-radius: 3px;
+			width: 114px;
+			height: 34px;
+			line-height: 1px;
+			background-color: #ff6d22;
+			color: #f5f5f5;
+			font-size: 14px;
+			margin-right: 8px;
+		}
+		.pay-button-two {
+			border: none;
+			cursor: pointer;
+			background-color: #fff;
+			color: #ff6d22;
+			font-size: 14px;
+		}
+	}
+
+	.wechatpay {
+		background: url(../../../assets/images/wechatsao.png) top right no-repeat;
+		height: 420px;
+		.code {
+			padding-left: 30px;
+			padding-top: 64px;
+			width: 240px;
+			p {
+				line-height: 60px;
+				text-align: center;
+				font-size: 16px;
+			}
+		}
+		.qrcode {
+			width: 200px;
+			height: 200px;
+			padding: 19px;
+			border: 1px solid #e7e7ee;
+			margin-right: 50px;
+		}
+	}
+}
+</style>

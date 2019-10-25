@@ -1,0 +1,109 @@
+<template>
+  <div>
+    <BreadCrumb :data=" [{ a: '退款管理', b: { path: '/droit' } }, { a: '订单详情', b: { path: '/order/pre-orders', query: { id: $route.query.orderId } } }, { a: '退款明细' }]"></BreadCrumb>
+    <div class="main-content w block-center">
+      <div class="summary margin-bottom">
+        <h4 v-html="progress.t"></h4>
+        <p v-html="progress.m"></p>
+        <div>
+          <el-button v-if="progress.b!=null" type="warning" size="mini" @click="opClick(progress.b.a)">{{progress.b.b}}</el-button>
+          <label v-if="progress.mb.length>0">
+            您还可以
+            <a href="javascript:void(0)" v-for="item in progress.mb" :key="item.id" @click="opClick(item.a)">{{item.b}}</a>
+          </label>
+        </div>
+      </div>
+      <div class="title border-bottom-solid">退款项目</div>
+      <table cellpadding="0" cellspacing="0" class="table theme-bluegray margin-v lineheight-three">
+        <colgroup>
+          <col width="210">
+          <col width="180">
+          <col width="200">
+          <col width="150">
+          <col width="480">
+        </colgroup>
+        <tr>
+          <th>服务类目</th>
+          <th>数量</th>
+          <th>单价</th>
+          <th>原金额</th>
+          <th>退款金额</th>
+        </tr>
+        <tr :key="item.fentryid" v-for="item in uiData.fentity">
+          <td>{{item.fseritemid.fname}}</td>
+          <td>{{item.fqty}}</td>
+          <td>{{item.fprice}}</td>
+          <td>{{item.famount}}</td>
+          <td>{{item.famount_chg}}</td>
+        </tr>
+      </table>
+      <div class="title border-bottom-solid">申请内容</div>
+      <ul class="list margin-v padding-bottom">
+        <li>需退款总金额：{{comm.priceSum(uiData.fmtotalamount-uiData.fmtotalamount_chg,2)}}元</li>
+        <li>退款原因：{{(uiData.fchangereasonenum||{fname:''}).fname}}</li>
+        <li>退款说明：{{uiData.frefundreason}}</li>
+        <li label="投诉凭证：">
+          <ImgRender :type="'list'" :source="(uiData.fimage||{id:''}).id"></ImgRender>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+<script>
+import {billView as base} from '../../../lib';
+import detailPlugIn from './detailPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ser_refund';
+billView.plugs = [new detailPlugIn({})];
+billView.mixins = [
+	{
+		computed: {
+			progress() {
+				let t = this;
+				switch (t.comm.Odefault(t.uiData.frefundstatus, 'id')) {
+					case 'doing_status01':
+						return {t: '退款请求已提交，请等待师傅受理', m: ' 如果师傅接受您的退款请求，退款将于72小时内返回您的账户，如果师傅拒绝您可以申请平台介入<br/>提交日期:' + t.uiData.foperatedate, mb: [{a: 'exit', b: '取消退款申请'}]};
+					case 'doing_status02':
+						return {t: '师傅同意您的退款请求', m: '提交日期:' + t.uiData.foperatedate, b: {a: 'lookmoney', b: '查看钱款'}, mb: []};
+					case 'doing_status03':
+						return {t: '退款申请失败', m: '', mb: []};
+					case 'doing_status04':
+						return {t: '您已经取消了退款申请', m: '提交日期: ' + t.uiData.foperatedate, mb: []};
+					case 'doing_status05':
+						return {t: '师傅不同意您的退款申请', m: '提交日期: ' + t.uiData.foperatedate, mb: [{a: 'exit', b: '取消退款申请'}]};
+					default:
+						return {t: '', m: '', mb: []};
+				}
+			}
+		},
+		methods: {
+			getData(type, data) {
+				let t = this;
+				switch (type) {
+					case 'merchantorder':
+						t.axios.post('/bill/ydj_merchantorder?operationno=GetMOrderAndOrderBaceInfo', {simpleData: {fmerchantid: t.$store.state.userCtx.linkIdentity.id, fbillno: data}}).then(res => {
+							t.tagData.orderBase = res.data.operationResult.srvData;
+							t.tagData.crumb[1].b.query = {id: t.tagData.orderBase.moid};
+						});
+				}
+			},
+			opClick(type) {
+				let t = this;
+				switch (type) {
+					case 'exit':
+						t.axios.post('/list/ser_refund?operationno=cancelRefundmoney', {selectedRows: [{pkValue: t.$route.query.id}]}).then(res => {
+							window.location.reload();
+						});
+						break;
+					case 'lookmoney':
+						t.$router.push({path: '/settle'});
+						break;
+				}
+			}
+		}
+	}
+];
+export default billView;
+</script>

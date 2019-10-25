@@ -1,0 +1,106 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main w block-center">
+      <Menu></Menu>
+      <div class="main-content-right">
+        <h4 class="title border-bottom-solid margin-bottom">个人资料</h4>
+        <el-form label-width="100px" class="personal-content" label-position="left" v-if="!comm.IsNullOrEmpty(uiData)">
+          <el-form-item label="头像">
+            <Upload :limit="1" v-model="uiData.fimage" v-if="tagData.isEdit"></Upload>
+            <ImgRender type="headPort" class="userhead" :source="uiData.fimage.id" v-if="!tagData.isEdit"></ImgRender>
+          </el-form-item>
+          <el-form-item label="商户名称">
+            <el-input type="text" v-model="uiData.fname" placeholder="商户名称" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="登录账户">
+            <el-input type="text" v-model="uiData.fphone" placeholder="登录账户" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="联系人" required>
+            <el-input type="text" v-model="uiData.fcontacts" placeholder="请输入联系人姓名" :disabled="!tagData.isEdit"></el-input>
+          </el-form-item>
+          <el-form-item label="联系电话">
+            <el-input type="text" v-model="uiData.floginname" placeholder="" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="经营区域">
+            <City v-model="tagData.city" :disabled="true"></City>
+          </el-form-item>
+          <el-form-item label="详细地址">
+            <el-input type="textarea" v-model="uiData.faddress" :disabled="!tagData.isEdit"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="opClick($event)">{{tagData.isEdit?'保存修改':'修改资料'}}</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Menu from '../../../components/menu';
+import Upload from '../../../components/upload';
+import ImgRender from '../../../components/imagerender';
+import City from '../../../components/city';
+import {billView as base} from '../../../lib';
+import customerPlugIn from './indexPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ydj_customer';
+billView.plugs = [new customerPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			opClick(obj) {
+				let t = this;
+
+				if (t.tagData.isEdit) {
+					if (t.comm.IsNullOrEmpty(t.uiData.fcontacts)) {
+						t.$message({
+							message: '请输入联系人姓名',
+							type: 'warning'
+						});
+						return;
+					}
+					if (t.comm.IsNullOrEmpty(t.uiData.fimage.id)) {
+						t.uiData.fimage = t.tagData.headIcon;
+					}
+					t.menuItemClick({opcode: 'save', event: obj});
+					t.tagData.headIcon = t.uiData.fimage;
+				} else {
+					t.uiData.fimage = {id: ''};
+				}
+				t.tagData.isEdit = !t.tagData.isEdit;
+			}
+		},
+		computed: {
+			city() {
+				return this.tagData.city;
+			}
+		},
+		watch: {
+			city(v) {
+				this.uiData.fprovince = {id: v[0] || ''};
+				this.uiData.fcity = {id: v[1] || ''};
+				this.uiData.fregion = {id: v[2] || ''};
+			}
+		},
+		components: {BreadCrumb, Menu, Upload, ImgRender, City}
+	}
+];
+export default billView;
+</script>
+<style lang="scss">
+.userhead {
+	width: 80px;
+	height: 80px;
+	border-radius: 40px;
+	border: 1px solid #e8e8e8;
+	overflow: hidden;
+	> img {
+		width: 80px;
+		height: 80px;
+	}
+}
+</style>

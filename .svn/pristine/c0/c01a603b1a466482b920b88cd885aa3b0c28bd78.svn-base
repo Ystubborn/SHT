@@ -1,0 +1,298 @@
+<template>
+  <div>
+    <BreadCrumb :data="[{ a: '师傅中心', b: { path: '/master' } }, { a: '师傅详细' }]"></BreadCrumb>
+    <div class="main-content w block-center master-detail" v-if="!comm.IsNullOrEmpty(uiData)">
+      <div class="masterbase">
+        <ImgRender class="head" type="headPort" :source="uiData.fimage"></ImgRender>
+        <div class="base">
+          <h5>{{uiData.fname}}</h5>
+          <p class="color-grey">{{uiData.fphone}}</p>
+          <i class="icon icon-bond" v-if="uiData.fispaymargin">已缴保证金{{uiData.fmarginamount}}元</i>
+        </div>
+        <div class="service">
+          <p>服务区域：{{uiData.area_txt}}</p>
+          <p>服务类目：{{uiData.fprofield_txt}}</p>
+        </div>
+        <div class="evl">
+          <p>综合评分:<el-rate :value="parseFloat(uiData.fevalqual.overallScore)" :colors="['#FEE018','#FEE018','#FEE018']" disabled></el-rate>
+          </p>
+          <p>
+            服务单数：
+            <label class="color-blue">{{uiData.fevalqual.orderCount}}</label> 好评率：
+            <label class="color-blue">{{uiData.fevalqual.applauseRate}}%</label>
+          </p>
+        </div>
+      </div>
+      <el-tabs v-model="tagData.tabActive">
+        <el-tab-pane label="服务介绍" name="one">
+          <p class="padding-bottom border-bottom-solid">服务介绍：{{uiData.fdescription}}</p>
+          <div v-if="uiData.fispledge" class="margin-top">
+            附加服务:
+						<br>
+            空跑费:{{uiData.femptyrunfee}}元<br>
+            免费售后:{{uiData.faftersale}}个月<br>
+            免费上楼:{{uiData.ffeeupstairs}}楼
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="完工图片" name="two">
+          <ImgRender type="list" class="doneimage" :source="uiData.fdoneimage"></ImgRender>
+        </el-tab-pane>
+      </el-tabs>
+      <dl>
+        <dt>
+          累计评价
+        </dt>
+        <dd>
+          <div class="evaluatebase">
+            <div class="evl-star">
+              综合评分
+              <p class="color-blue"><span class="font20 bold">{{uiData.fevalqual.overallScore}}</span>/5分</p>
+              <el-rate :colors="['#FEE018','#FEE018','#FEE018']" :value="parseFloat(uiData.fevalqual.overallScore)" disabled></el-rate>
+            </div>
+            <h6 class="color-grey">大家都评论</h6>
+            <ul>
+              <li v-for="item in evaluate.filter(o=>{return o.count>0 })" :key="item.name">{{item.name}}{{ item.count>0?'('+item.count+')':''}}</li>
+            </ul>
+          </div>
+          <ul>
+            <li v-for="item in tagData.evaluateList" :key="item.fid">
+              <div class="time color-gray">{{comm.DateToString(comm.toDate(item.fevaluatedate),'yyyy-MM-dd HH:mm')}}</div>
+              <div class="col color-gray">
+                <div class="col-5 font14">
+                  客户评分<el-rate :colors="['#FEE018','#FEE018','#FEE018']" :value="parseFloat(item.fqualstar)" disabled></el-rate>
+                </div>
+                <div class="col-5 font14">
+                  服务类型：<span class="color-blue">{{item.fservicetype_fenumitem}}</span>
+                </div>
+              </div>
+              <p>{{item.fevaludesc}}</p>
+              <label class="color-gray"><i class="icon icon-mark"></i>{{item.fqual}}</label>
+            </li>
+          </ul>
+          <template>
+            <div class="text-center">
+              <el-pagination @size-change="getData('evaluateList',{type:'size',value:$event})" @current-change="getData('evaluateList',{type:'index',value:$event})" :current-page="tagData.listDesc.pageIndex" :page-sizes="[10, 30, 50]" :page-size="tagData.listDesc.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="tagData.listDesc.records"></el-pagination>
+            </div>
+          </template>
+        </dd>
+      </dl>
+    </div>
+  </div>
+</template>
+<script>
+import {billView as base} from '../../lib';
+import detailPlugIn from './detailPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ydj_master';
+billView.plugs = [new detailPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			getData(type, data) {
+				let t = this;
+				switch (type) {
+					case 'evaluate':
+						t.axios.post('/bill/ydj_service?operationno=querycombo&fieldkey=fqual', {loadingOption: {target: '.element-loading'}}).then(res => {
+							t.tagData.fquallist = res.data.operationResult.srvData.data;
+						});
+						break;
+					case 'evaluateList':
+						t.axios
+							.post('/bill/ydj_service?operationno=GetEvaluateList', {
+								simpleData: {
+									pageIndex: data.type == 'index' ? data.value : 1,
+									pageSize: data.type == 'size' ? data.value : 10,
+									masterId: this.uiData.id
+								}
+							})
+							.then(res => {
+								t.tagData.evaluateList = res.data.operationResult.srvData.datas;
+								t.tagData.evaluateList.forEach(o => {
+									o.fqualstar = parseInt(o.fqualstar);
+								});
+								let listDesc = res.data.operationResult.srvData.pageInfos;
+								listDesc.records = listDesc.pageCount;
+								t.tagData.listDesc = listDesc;
+							});
+						break;
+				}
+			}
+		},
+		computed: {
+			evaluate() {
+				let t = this;
+				let array = t.tagData.fquallist;
+				let res = [];
+				for (let i = 0; i < array.length; i++) {
+					const element = array[i];
+					res.push({name: element.name, count: t.comm.Odefault(t.uiData.fevalqual, element.id)});
+				}
+				return res;
+			}
+		}
+	}
+];
+export default billView;
+</script>
+<style lang="scss">
+.master-detail {
+	dl {
+		margin-top: 30px;
+		border: 1px solid #e8e8e8;
+		dt {
+			background-color: #f5f5f5;
+			font-size: 16px;
+			font-weight: bold;
+			height: 40px;
+			line-height: 40px;
+			border-bottom: 1px solid #e8e8e8;
+			text-indent: 20px;
+		}
+		dd {
+			.el-rate {
+				height: 18px;
+				display: block;
+				margin-left: 0;
+			}
+			.el-rate__icon {
+				font-size: 16px;
+			}
+			& > ul {
+				li {
+					padding: 20px;
+					border-bottom: 1px solid #e8e8e8;
+					position: relative;
+					.el-rate {
+						display: inline-block;
+					}
+					.time {
+						position: absolute;
+						top: 20px;
+						right: 20px;
+						font-size: 12px;
+					}
+					p {
+						padding: 10px 0;
+						font-size: 15px;
+					}
+					label {
+						i {
+							vertical-align: text-bottom;
+							margin-right: 6px;
+						}
+						line-height: 14px;
+						font-size: 12px;
+					}
+				}
+			}
+			.evaluatebase {
+				font-size: 0;
+				border-bottom: 1px solid #e8e8e8;
+				& > * {
+					display: inline-block;
+					vertical-align: top;
+				}
+				h6 {
+					width: 18px;
+					text-align: center;
+					line-height: 18px;
+					font-size: 14px;
+					margin-left: 10px;
+					padding-top: 10px;
+				}
+				.evl-star {
+					width: 150px;
+					text-align: center;
+					border-right: 1px solid #e8e8e8;
+					padding: 20px 0;
+					font-size: 14px;
+				}
+
+				ul {
+					width: 910px;
+					padding: 20px 0 0 20px;
+					li {
+						display: inline-block;
+						border: 1px solid #0086e4;
+						box-sizing: border-box;
+						font-size: 12px;
+						color: #0086e4;
+						width: 170px;
+						margin: 0 12px 12px 0;
+						height: 32px;
+						line-height: 32px;
+						border-radius: 6px;
+						text-align: center;
+					}
+				}
+			}
+		}
+	}
+}
+.doneimage {
+	.img-array li {
+		width: 206px;
+		height: 206px;
+		margin-right: 25px;
+		margin-bottom: 25px;
+		&:nth-child(5n) {
+			margin-right: 0px;
+		}
+		img {
+			width: 206px;
+			height: 206px;
+		}
+	}
+}
+.masterbase {
+	font-size: 0;
+	padding: 30px;
+	border: 1px solid #e8e8e8;
+	position: relative;
+	margin-bottom: 15px;
+	& > * {
+		display: inline-block;
+		font-size: 14px;
+		vertical-align: top;
+	}
+	.head {
+		width: 112px;
+		height: 112px;
+		overflow: hidden;
+		border-radius: 50%;
+		border: 1px solid #e8e8e8;
+		margin: 0 25px 0 15px;
+		img {
+			width: 100%;
+		}
+	}
+	.base {
+		width: 200px;
+		h5 {
+			font-size: 16px;
+			line-height: 28px;
+			font-weight: bold;
+			margin-bottom: 18px;
+		}
+		p {
+			margin-bottom: 18px;
+		}
+	}
+	.service {
+		width: 260px;
+		padding-right: 40px;
+		p {
+			margin: 8px 0;
+		}
+	}
+	.evl {
+		width: 280px;
+		p {
+			margin: 8px 0;
+		}
+	}
+}
+</style>
+

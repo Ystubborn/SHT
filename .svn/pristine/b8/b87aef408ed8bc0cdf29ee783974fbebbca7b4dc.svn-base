@@ -1,0 +1,229 @@
+<template>
+  <div class="problem">
+    <div class="problem-search">
+      <div class=" w block-center relative"><i class="el-icon-info"></i>帮助中心<input type="text" placeholder="请输入你想了解的内容..." v-model="tagData.search" @keyup.enter="search" /><button type="button" @click="search">搜索</button></div>
+    </div>
+    <div class="main w block-center">
+      <dl class="left-menu">
+        <dt>
+          常见问题
+        </dt>
+        <dd v-for="item in tagData.helpType" :key="item.id" :class="item.id==tagData.helpActive.id&&'is-active'" @click="tagData.helpActive=item">{{item.name}}</dd>
+      </dl>
+      <div class="problem-list">
+        <h3 class="font20 text-indent" v-if="!comm.IsNullOrEmpty(tagData.helpActive)">{{tagData.helpActive.name}}</h3>
+        <ul>
+          <li v-for="item in uiData.listData" :key="item.fbillhead_id">
+            <h5>{{item.ftitle}}</h5>
+            {{item.fdescription}}
+          </li>
+        </ul>
+        <template>
+          <div class="text-center">
+            <el-pagination v-if="comm.IsNullOrEmpty(tagData.hotitem)" @size-change="customEvent({opcode:'pageSizeChanged',value:$event})" @current-change="customEvent({opcode:'pageIndexChanged',value:$event})" :current-page="uiData.listDesc.pageIndex" :page-sizes="[10, 30, 50]" :page-size="uiData.listDesc.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="uiData.listDesc.records"></el-pagination>
+          </div>
+        </template>
+      </div>
+      <dl class="right-menu">
+        <dt>
+          热门问题
+        </dt>
+        <dd v-for="item in tagData.hotData" :key="item.fbillhead_id" :class="item.fbillhead_id==tagData.hotitem&&'is-active'" @click="tagData.hotitem=item.fbillhead_id">{{item.ftitle}}</dd>
+      </dl>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+.problem {
+	.problem-search {
+		background-color: #f8f8f8;
+		height: 84px;
+		line-height: 84px;
+		font-size: 30px;
+		i {
+			margin: 0 10px;
+		}
+		input {
+			width: 650px;
+			height: 53px;
+			box-sizing: border-box;
+			border: 3px solid #0086e4;
+			position: absolute;
+			display: block;
+			right: 240px;
+			top: 16px;
+			padding: 0 200px 0 15px;
+		}
+		button {
+			width: 90px;
+			height: 53px;
+			background-color: #0086e4;
+			position: absolute;
+			display: block;
+			right: 240px;
+			top: 16px;
+			font-size: 20px;
+			color: #fff;
+		}
+	}
+	.main {
+		padding-top: 10px;
+	}
+	.left-menu {
+		display: inline-block;
+		vertical-align: top;
+		width: 160px;
+		text-align: center;
+		dt {
+			height: 60px;
+			font-size: 16px;
+			line-height: 60px;
+			background-color: #ebebeb;
+		}
+		dd {
+			background-color: #f9f9f9;
+			height: 60px;
+			line-height: 60px;
+			border: 1px solid #ebebeb;
+			border-top: 0;
+			font-size: 15px;
+			cursor: pointer;
+			&.is-active {
+				color: #db4d00;
+				font-size: 16px;
+				position: relative;
+				cursor: default;
+				&::after {
+					content: '\e604';
+					font-family: element-icons !important;
+					font-size: 20px;
+					position: absolute;
+					right: 15px;
+				}
+			}
+		}
+	}
+	.right-menu {
+		display: inline-block;
+		vertical-align: top;
+		width: 290px;
+		text-align: left;
+		dt {
+			height: 40px;
+			font-size: 16px;
+			line-height: 40px;
+			background-color: #ebebeb;
+			padding-left: 14px;
+		}
+		dd {
+			background-color: #f9f9f9;
+			height: 40px;
+			line-height: 40px;
+			border: 1px solid #ebebeb;
+			border-top: 0;
+			font-size: 15px;
+			padding-left: 14px;
+			cursor: pointer;
+			&.is-active {
+				cursor: default;
+				color: #db4d00;
+			}
+		}
+	}
+	.problem-list {
+		display: inline-block;
+		vertical-align: top;
+		width: 730px;
+		margin: 0 10px;
+		border: 1px solid #ebebeb;
+		background-color: #f9f9f9;
+		padding: 20px 14px;
+		box-sizing: border-box;
+		h3 {
+			padding: 10px 0;
+		}
+		h5 {
+			font-size: 16px;
+			position: relative;
+			height: 40px;
+			line-height: 40px;
+			&:before {
+				background-image: url(../../../assets/images/icon.png);
+				width: 31px;
+				height: 31px;
+				display: block;
+				background-position: 0 -219px;
+				content: '';
+				position: absolute;
+				left: -40px;
+				top: 5px;
+			}
+		}
+		& > ul {
+			padding-bottom: 30px;
+			li {
+				font-size: 14px;
+				padding-left: 40px;
+				margin-bottom: 20px;
+			}
+		}
+	}
+}
+</style>
+<script>
+import {listView as base} from '../../../lib';
+import ProblemListPlugIn from './indexPlugIn';
+const listView = {
+	extends: base
+};
+listView.formId = 'ydj_helpcenter';
+listView.plugs = [new ProblemListPlugIn({})];
+listView.mixins = [
+	{
+		methods: {
+			getData(type) {
+				let t = this;
+				switch (type) {
+					case 'QueryCombo':
+						t.axios.post('/bill/ydj_helpcenter?operationno=QueryComboBatch', {loadingOption: {target: '.element-loading'}, simpleData: {fieldKey: 'fknowledge'}}).then(res => {
+							let data = res.data.operationResult.srvData;
+							t.tagData.helpType = data.fknowledge;
+						});
+						break;
+					case 'hotlist':
+						t.axios.post('/list/ydj_helpcenter.json?operationno=querydata', {filterString: "fispopular=1  and fpublishstatus='send_status_01'", loadingOption: {target: '.element-loading'}, pageSize: 10, pageIndex: 1}).then(res => {
+							t.tagData.hotData = t.comm.Odefault(res.data.operationResult.srvData, 'data');
+						});
+						break;
+					default:
+						break;
+				}
+			},
+			search() {
+				if (!this.comm.IsNullOrEmpty(this.tagData.search)) {
+					this.tagData.helpActive = {id: '', name: '搜索结果'};
+					this.tagData.hotitem = '';
+					this.query.filterString = this.comm.StringFormat("fpublishstatus='send_status_01' and ftitle like'%{0}%' or fdescription like '%{0}%'", this.tagData.search);
+				}
+			}
+		},
+		computed: {
+			knowledge() {
+				if (!this.comm.IsNullOrEmpty(this.tagData.helpActive)) {
+					return this.tagData.helpActive.id;
+				}
+			}		
+		},
+		watch: {
+			knowledge(v) {
+				if (!this.comm.IsNullOrEmpty(v)) {
+					this.tagData.search = '';
+					this.tagData.hotitem = '';
+					this.query.filterString = "fpublishstatus='send_status_01' and fknowledge='" + v + "'";
+				}
+			}
+		}
+	}
+];
+export default listView;
+</script>

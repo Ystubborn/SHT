@@ -1,0 +1,111 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main-content w block-center complain">
+      <div class="title border-bottom-solid">订单信息</div>
+      <ul class="list margin-vertical padding-bottom" v-if="!comm.IsNullOrEmpty(tagData.orderBase)">
+        <li>订单号：{{tagData.orderBase.mobillno}}</li>
+        <li>订单金额：¥{{tagData.orderBase.fexpectamount}}</li>
+        <li>服务类型：{{tagData.orderBase.fservicetype}}</li>
+      </ul>
+      <el-form label-width="120px" label-position="left" :model="uiData" ref="uiData" :rules="rules" v-if="!comm.IsNullOrEmpty(uiData.fcomplaintitem)">
+        <el-form-item label="投诉内容" is-required prop="fcomplaintitem.id">
+          <el-select size="small" v-model="uiData.fcomplaintitem.id" placeholder="请选择投诉原因" @change="opChange('complaintitem',$event)">
+            <el-option v-for="item in tagData.reasonlist" :key="item.fid" :label="item.ftitle" :value="item.fid"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="uiData.fcomplaintitem.id!==''">
+          <div class="desc" v-html="tagData.reasonmome"></div>
+        </el-form-item>
+        <el-form-item label="用户投诉赔付金" v-if="uiData.fcomplaintitem.id!==''">
+          <span class="color-blue">¥{{tagData.reasonprice}}</span>
+        </el-form-item>
+        <el-form-item label="投诉说明" is-required prop="fcomplain">
+          <el-input type="textarea" :rows="6" placeholder="请输入内容" v-model="uiData.fcomplain"></el-input>
+        </el-form-item>
+        <el-form-item label="凭证">
+          <Upload :limit="3" v-model="uiData.fimage"></Upload>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="botton-orange" size="small" @click="opClick('save')">确定</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </div>
+</template> 
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Upload from '../../../components/upload';
+import {billView as base} from '../../../lib';
+import createPlugIn from './createPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ser_complaintrecord';
+billView.plugs = [new createPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			getData(type) {
+				let t = this;
+				switch (type) {
+					case 'complaintitem':
+						t.axios.post('/bill/ser_complaintitem?operationno=getItemList', {loadingOption: {target: '.element-loading'}}).then(res => {
+							t.tagData.reasonlist = res.data.operationResult.srvData.datas;
+						});
+						break;
+					case 'orderbase':
+						t.axios.post('/bill/ydj_merchantorder?operationno=GetMOrderAndOrderBaceInfo', {simpleData: {fmerchantid: t.$store.state.userCtx.linkIdentity.id, id: t.$route.query.orderId}}).then(res => {
+							t.tagData.orderBase = res.data.operationResult.srvData;
+						});
+				}
+			},
+			opChange(type, data) {
+				let t = this;
+				switch (type) {
+					case 'complaintitem':
+						let a = _.find(t.tagData.reasonlist, o => {
+							return o.fid === data;
+						});
+						t.tagData.reasonmome = a.fcontent
+							.replace(/<\/p>/g, '{br}')
+							.replace(/<[^>]+>/g, '')
+							.replace(/&nbsp;/g, ' ')
+							.replace(/{br}/g, '<br/>')
+							.replace('<br/><br/>', '<br/>');
+						t.tagData.reasonprice = a.fitemmoney;
+						break;
+				}
+			},
+			opClick(type) {
+				let t = this;
+				switch (type) {
+					case 'save':
+						t.$refs['uiData'].validate(valid => {
+							if (!valid) {
+								t.$message({
+									message: '请完善当前订单信息',
+									type: 'warning'
+								});
+								return false;
+							}
+							t.menuItemClick({opcode: 'save', event: 'uiData'});
+						});
+						break;
+				}
+			}
+		},
+		components: {BreadCrumb, Upload}
+	}
+];
+export default billView;
+</script>
+<style lang="scss">
+.complain .desc {
+	background: rgba(250, 250, 250, 1);
+	border: 1px solid rgba(232, 232, 232, 1);
+	padding: 15px 10px;
+	font-size: 12px;
+	line-height: 18px;
+}
+</style>

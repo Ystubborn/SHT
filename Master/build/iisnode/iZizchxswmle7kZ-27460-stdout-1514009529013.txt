@@ -1,0 +1,10 @@
+[HPM] Proxy created: /auth/credentials  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /auth/status  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /dynamic  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /bill  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /list  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /report  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /auth/logout  ->  http://store.yidaohome.com/
+[HPM] Proxy created: /reguser  ->  http://store.yidaohome.com/
+Build server listening at http://localhost:\\.\pipe\e3a649ff-fc25-44be-b489-47110d7e8c66
+

@@ -1,0 +1,630 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main w block-center">
+      <Menu></Menu>
+      <div class="main-content-right order-list">
+        <el-dialog title="评价" v-if="!comm.IsNullOrEmpty(tagData.evaluate)" :visible.sync="tagData.evaluate.visible" top="30vh">
+          <div class="font15 color-black">服务已完成。</div>
+          <p class="color-grey margin-vertical-half">请您对师傅的安装质量及服务进行评价：</p>
+          <el-form label-width="88px" label-position="left">
+            <el-form-item label="服务评分：">
+              <el-rate :colors="['#FEE018','#FEE018','#FEE018']" v-model="tagData.evaluate.fqualstar" show-text :texts="['非常不满意，各方面都很差', '不满意 ，比较差', '一般，还需改善', '比较满意，仍可改善', '非常满意，无可挑剔']" text-color="#0086e4">
+              </el-rate>
+            </el-form-item>
+            <el-form-item label="服务印象：">
+              <ul class="evaluate-list">
+                <li v-for="item in assess" :key="item.id" @click="opClick('assessItem',{data:item,dom:$event})">{{item.name}}</li>
+              </ul>
+            </el-form-item>
+            <el-form-item label="我要评价：">
+              <el-input type="textarea" v-model="tagData.evaluate.fevaludesc" placeholder="您可以对本单服务的师傅进行评价，有效的评价可以帮助我们未来提供更好的服务" :rows="4" :maxlength="500"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer">
+            <el-button @click="opClick('assessExit')">取消</el-button>
+            <el-button type="primary" @click="opClick('assessConfirm')">确定</el-button>
+          </span>
+        </el-dialog>
+        <el-dialog title="完工码" v-if="!comm.IsNullOrEmpty(tagData.done)" :visible.sync="tagData.done.visible">
+          <p class="color-red margin-bottom">提示：“完工码”是订单安装完工后，师傅需要填写至APP端的核销码，如未完工请勿提供</p>
+          <p>本单完工码为：</p>
+          <div class="donecode text-center color-blue">{{tagData.done.code}}</div>
+        </el-dialog>
+        <el-tabs v-if="tagData.tabsVisible" v-model="tagData.tA" @tab-click="customEvent({opcode:'tabClick'})">
+          <el-tab-pane v-for="item in tagData.tD" :key="item.a" :name="item.b">
+            <span slot="label">{{item.a}}<label class="color-red" v-if="!comm.IsNullOrEmpty(item.c,0)">({{item.c}})</label></span>
+          </el-tab-pane>
+        </el-tabs>
+        <div class="search">
+          <label>客户信息</label>
+          <el-input placeholder="客户姓名/手机号" v-model="tagData.cS" @keyup.enter.native="queryInit('search')"></el-input>
+          <label>订单号</label>
+          <el-input placeholder="订单号" v-model="tagData.oS" @keyup.enter.native="queryInit('search')"></el-input>
+          <el-button @click="queryInit('search')">搜索</el-button>
+          <el-button @click="opClick('reset')">重置</el-button>
+        </div>
+        <ul class="order-title">
+          <li>
+            <el-date-picker v-model="tagData.calendar" type="daterange" align="right" unlink-panels range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="tagData.calendarPicker" @change="queryInit('search')">
+            </el-date-picker>
+          </li>
+          <li>客户信息</li>
+          <li>金额</li>
+          <li>
+            <el-select v-if="tagData.tA==='zero'&&tagData.tabsVisible" v-model="tagData.tAta" @change="queryInit('search')">
+              <el-option v-for="item in tagData.tD" :key="item.a" :label="item.a" :value="item.b"></el-option>
+            </el-select>
+            <span v-if="tagData.tA!=='zero'||!tagData.tabsVisible">状态</span>
+          </li>
+          <li>操作</li>
+        </ul>
+        <table width="100%" class="order-item" :key="item.fbillhead_id" v-for="item in uiData.listData">
+          <colgroup>
+            <col width="155">
+            <col width="325">
+            <col width="145">
+            <col width="145">
+            <col width="225">
+          </colgroup>
+          <tr>
+            <th align="left" colspan="5">
+              <strong>{{item.fcreatedate}}</strong><span>订单编号:{{item.fbillno}}</span>
+              <span v-if="!comm.IsNullOrEmpty(item.fmaster_name)&&item.fserstatus!=='sht_serstatus08'">安装师傅:<label class="color-orange">{{item.fmaster_name}}</label></span>
+              <span v-if="!comm.IsNullOrEmpty(item.fmaster_name)&&item.fserstatus!=='sht_serstatus08'">联系电话:{{item.fmaster_fphone}}</span>
+              <button v-if="item.fserstatus=='sht_serstatus06'&&!comm.IsNullOrEmpty(item.fcompletioncode)" @click="opClick('alookDoneCode',item.fcompletioncode)">查看完工码</button>
+              <a href="javascript:" title="批注" :class="['icon',comm.IsNullOrEmpty(item.fannotation)?'':'cur']" @click="opClick('editAnnotation',item)"></a>
+            </th>
+          </tr>
+          <tr>
+            <td>{{item.fservicetype_fenumitem}}</td>
+            <td>
+              <p>{{item.fname}}　　{{item.fphone}}</p>
+              <p>{{item.fcusaddress}}</p>
+            </td>
+            <td class="color-red">￥{{item.fexpectamount}}</td>
+            <td>
+              <div v-html="statusInit(item)"></div>
+              <Timer class="color-orange" v-if="!comm.IsNullOrEmpty(item.fcompletiondate)&&item.fserstatus=='sht_serstatus07'" :endTime="item.fcompletiondate" day="-7" :format="'距离自动验收还剩：<br/>{dd}天{HH}时{mm}分{ss}秒'"></Timer>
+            </td>
+            <td>
+              <a href="javascript:void(0)" :key="button.b" v-for="button in btnOpInit(item.fserstatus,item.fisrepublish,item.fisrefund)" @click="opClick(button.b,item)">{{button.a}}</a>
+            </td>
+          </tr>
+        </table>
+        <template>
+          <div class="text-center">
+            <el-pagination @size-change="customEvent({opcode:'pageSizeChanged',value:$event})" @current-change="customEvent({opcode:'pageIndexChanged',value:$event})" :current-page="uiData.listDesc.pageIndex" :page-sizes="[10, 30, 50]" :page-size="uiData.listDesc.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="uiData.listDesc.records"></el-pagination>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import BreadCrumb from '../../components/breadcrumb';
+import Menu from '../../components/menu';
+import Timer from '../../components/timer';
+import {listView as base} from '../../lib';
+import OrderListPlugIn from './indexPlugIn';
+const listView = {
+	extends: base
+};
+listView.formId = 'ydj_merchantorder';
+listView.plugs = [new OrderListPlugIn({})];
+listView.mixins = [
+	{
+		methods: {
+			/**
+      *
+      加载数据
+      *
+      @method queryInit
+      @param {string} type 类型
+      @param {string} [name] tabs name
+      @param {Object} [data] Vm.data/this
+      */
+			queryInit(type, name, data) {
+				let t = data || this;
+				let filterArray = [t.tagData.mS];
+				switch (type) {
+					case 'tabs':
+						t.tagData.tA = name;
+					case 'menus':
+						t.tagData.tabsVisible = type === 'tabs';
+						t.tagData.cS = '';
+						t.tagData.oS = '';
+						t.tagData.calendar = '';
+						if (t.tagData.tA === 'zero') {
+							t.tagData.tAta = 'zero';
+						}
+						let source = type === 'tabs' ? t.tagData.tD : t.tagData.otherOrderFilter;
+						t.tagData.tS = source.find(o => {
+							return o.b === name;
+						}).s;
+						filterArray.push(t.tagData.tS);
+						break;
+					case 'search':
+						if (this.comm.IsNullOrEmpty(t.tagData.tS)) {
+							filterArray.push(
+								this.comm.Odefault(
+									t.tagData.tD.find(o => {
+										return o.b === t.tagData.tAta;
+									}),
+									's'
+								)
+							);
+						} else {
+							filterArray.push(t.tagData.tS);
+						}
+						if (!this.comm.IsNullOrEmpty(t.tagData.cS)) {
+							filterArray.push(this.comm.StringFormat("(fname like '%{0}%' or fphone like '%{0}%')", t.tagData.cS));
+						}
+						if (!this.comm.IsNullOrEmpty(t.tagData.oS)) {
+							filterArray.push(this.comm.StringFormat("(fbillno like '%{0}%')", t.tagData.oS));
+						}
+						if (!this.comm.IsNullOrEmpty(t.tagData.calendar)) {
+							filterArray.push(this.comm.StringFormat("(fcreatedate > '{0}' and fcreatedate<='{1}')", this.comm.DateToString(t.tagData.calendar[0], 'yyyy-MM-dd HH:mm:ss'), this.comm.DateToString(t.tagData.calendar[1], 'yyyy-MM-dd HH:mm:ss')));
+						}
+						break;
+				}
+				if (t.tagData.tabsVisible) {
+					this.cornerMarker(t);
+					//t.tagData.cMload = !1;
+				}
+				this.comm.ArrayRemove(filterArray, o => {
+					return this.comm.IsNullOrEmpty(o);
+				});
+				if (!t.query) {
+					t.query = {filterString: filterArray.join(' and ')};
+				} else {
+					t.query.filterString = filterArray.join(' and ');
+				}
+			},
+			/**
+      *
+      状态对应条数角标
+      *
+      @method cornerMarker
+      @param {Object} d this
+      */
+			cornerMarker(d) {
+				let t = this;
+				t.axios.post('/bill/ydj_merchantorder?operationno=getMorderStatistics', {loadingOption: {target: '.order-panel'}, simpleData: {merchantId: t.$store.state.userCtx.linkIdentity.id}}).then(res => {
+					let srvData = res.data.operationResult.srvData;
+					if (srvData instanceof Array) {
+						t.tagData.tD = t.tagData.tD.map(o => {
+							o.c = _.sum(
+								_.map(
+									_.filter(srvData, a => {
+										return o.s.indexOf(a.fname) > -1;
+									}),
+									'fcount'
+								)
+							);
+							return o;
+						});
+					}
+				});
+			},
+			/*状态颜色*/
+			statusInit(obj) {
+				let id = obj.fserstatus,
+					txt = obj.fserstatus_fenumitem;
+				let userCtx = this.$store.state.userCtx;
+				if (userCtx.isPlatform) {
+					switch (id) {
+						case 'sht_serstatus03': //已提交
+							txt = '待报价';
+							break;
+						case 'sht_serstatus10': //报价中
+							txt = '已报价';
+							break;
+					}
+				} else {
+					switch (id) {
+						case 'sht_serstatus02': //已拒单
+							txt = '平台驳回';
+							break;
+					}
+				}
+				switch (id) {
+					case 'sht_serstatus00': //草稿
+					case 'sht_serstatus03': //已提交
+					case 'sht_serstatus12': //待预约'
+					case 'sht_serstatus16': //待提货
+						return '<label class="color-green">' + txt + '</label>';
+					case 'sht_serstatus02': //已拒单
+					case 'sht_serstatus07': //已完工
+					case 'sht_serstatus10': //报价中
+					case 'sht_serstatus11': //待支付
+						return (id === 'sht_serstatus07' ? '<label class="color-red">待验收</label><br/>' : '') + '<label class="color-red">' + txt + '</label>';
+					default:
+						//sht_serstatus01|已取消,sht_serstatus04|平台审核,sht_serstatus05|商户确认,sht_serstatus06|服务中,sht_serstatus08|验收完成,sht_serstatus09|已指派服务商
+						if (id === 'sht_serstatus06' && obj.fishang == 1) {
+							return '<label class="color-red">订单挂起</label><br/><label class="color-gray">' + txt + '</label>';
+						}
+
+						return '<label class="color-gray">' + txt + '</label>';
+				}
+			},
+
+			/**
+      *
+      列表操作按钮初始化
+      *
+      @method btnOpInit
+      @param {String} a 状态字符串
+      @return {Array} Array[Object]
+      */
+			btnOpInit(a, isrepublish, isrefund) {
+				let i = a.length > 13 ? a.substring(13) : a;
+				let arr = [];
+				if (this.$route.query.type == 'HuOrder') {
+					return [{a: '查看原因', b: 'lookfishang'}, {a: '查看订单', b: 'lookOrder'}];
+				}
+				switch (i) {
+					case '00':
+						arr = ['submitOrder', 'updateOrder'];
+						break;
+					case '01':
+						arr = isrepublish == 1 ? ['lookOrder'] : ['republish', 'lookOrder'];
+						break;
+					case '02':
+						arr = ['updateOrder', 'lookOrder'];
+						break;
+					case '03':
+					case '16':
+						arr = ['lookOrder', 'exitOrder'];
+						break;
+					case '06':
+						arr = this.comm.IsNullOrEmpty(isrefund) ? ['lookOrder', 'applyRefund', 'complain'] : ['lookOrder', 'complain'];
+						break;
+					case '07':
+						arr = this.comm.IsNullOrEmpty(isrefund) ? ['acceptOrder', 'lookOrder', 'applyRefund', 'feedback'] : ['acceptOrder', 'lookOrder', 'feedback'];
+						break;
+					case '08':
+						arr = ['lookOrder'];
+						break;
+					case '10':
+						arr = ['lookPrice', 'lookOrder', 'exitOrder'];
+						break;
+					case '11':
+						arr = ['payOrder', 'exitPay', 'lookOrder', 'exitOrder'];
+						break;
+					case '12':
+					case '13':
+						arr = this.comm.IsNullOrEmpty(isrefund) ? ['lookOrder', 'applyRefund', 'complain'] : ['lookOrder', 'complain'];
+						break;
+				}
+				return _.filter(this.tagData.opBtn, o => {
+					return arr.indexOf(o.b) > -1;
+				});
+			},
+			/**
+      *
+      按钮事件
+      *
+      @method opClick
+      @param {String} a 操作Code
+      @param {Object} [b] 数据
+      */
+			opClick(a, b) {
+				let t = this;
+				switch (a) {
+					case 'reset': //重置搜索条件
+						t.tagData.cS = '';
+						t.tagData.oS = '';
+						t.tagData.calendar = '';
+						t.tagData.tAta = 'zero';
+						break;
+					case 'submitOrder': //提交订单
+						t.$confirm('确定提交订单吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						})
+							.then(() => {
+								t.invokeFormOperation({
+									formId: t.formCtx.formId,
+									opcode: 'sht_submitbill',
+									param: {
+										selectedRows: [
+											{
+												pkValue: b.fbillhead_id
+											}
+										]
+									}
+								}).then(res => {
+									t.queryInit('tabs', 'two');
+									t.cornerMarker(t);
+								});
+							})
+							.catch(() => {});
+						break;
+					case 'updateOrder': //修改订单
+						t.$router.push({
+							path: '/order/pre-order',
+							query: {id: b.fbillhead_id}
+						});
+						break;
+					case 'lookOrder': //查看订单
+						t.$router.push({
+							path: '/order/pre-orders',
+							query: {id: b.fbillhead_id}
+						});
+						break;
+					case 'editAnnotation': //修改或设置批注
+						t.$prompt('', '订单备注', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							inputValue: b.fannotation,
+							inputType: 'textarea'
+						})
+							.then(({value}) => {
+								t.axios.post('/list/ydj_merchantorder?operationno=editannotation', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: b.fbillhead_id}], simpleData: {fannotation: value}}).then(res => {
+									b.fannotation = value;
+								});
+							})
+							.catch(() => {});
+						break;
+					case 'exitOrder': //取消订单
+						t.$confirm('确定取消订单吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						})
+							.then(() => {
+								t.invokeFormOperation({
+									formId: t.formCtx.formId,
+									opcode: 'sht_cancelbill',
+									param: {selectedRows: [{pkValue: b.fbillhead_id}]}
+								}).then(res => {
+									t.$router.push({path: '/order', query: {type: 'ExOrder'}});
+								});
+							})
+							.catch(() => {});
+						break;
+					case 'lookPrice': //查看报价
+						t.$router.push({
+							path: '/order/pre-orders',
+							query: {id: b.fbillhead_id, tab: 'two'}
+						});
+						break;
+					case 'payOrder': //支付订单
+						t.$router.push({
+							path: '/pay',
+							query: {
+								id: b.fbillhead_id,
+								price: b.fexpectamount,
+								number: b.fbillno,
+								phone: b.fphone,
+								name: b.fname,
+								address: b.fcusaddress,
+								ordertype: 'ydj_merchantorder',
+								islogistics: t.$store.state.userCtx.isPlatform && ['fres_type_01', 'fres_type_03'].indexOf(b.fservicetype) > -1
+							}
+						});
+						break;
+					case 'exitPay': //取消支付
+						t.$confirm('确定取消支付订单吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						})
+							.then(() => {
+								t.axios.post('/list/ydj_merchantorder?operationno=cancelPay', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: b.fbillhead_id}]}).then(res => {
+									t.tagData.tA = 'three';
+									t.queryInit('tabs', 'three');
+									t.cornerMarker(t);
+								});
+							})
+							.catch(() => {});
+						break;
+						break;
+					case 'complain': //投诉
+						t.$router.push({
+							path: '/droit/cre-complain',
+							query: {orderId: b.fbillhead_id}
+						});
+						break;
+					case 'acceptOrder': //验收窗口显示
+						if (t.comm.IsNullOrEmpty(t.tagData.evaluate.fquallist)) {
+							t.axios.post('/bill/ydj_merchantorder?operationno=querycombo&fieldkey=fqual', {loadingOption: {target: '.element-loading'}}).then(res => {
+								t.tagData.evaluate.fquallist = res.data.operationResult.srvData.data;
+							});
+						}
+						t.$confirm('确定验收吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						})
+							.then(() => {
+								t.opClick('acceptBill', b.fbillhead_id);
+							})
+							.catch(() => {});
+						break;
+					case 'acceptBill': //验收数据提交
+						let c = arguments[2];
+						t.invokeFormOperation({
+							formId: t.formCtx.formId,
+							opcode: 'sht_acceptbill',
+							param: {
+								selectedRows: [
+									{
+										pkValue: b
+									}
+								],
+								simpleData: {examinCode: c}
+							}
+						}).then(res => {
+							if (t.comm.IsNullOrEmpty((res.response.operationResult.srvData || {examinCode: ''}).examinCode)) {
+								t.queryInit('tabs', 'ten');
+								t.cornerMarker(t);
+								t.tagData.evaluate.visible = !0;
+								t.tagData.evaluate.id = b;
+							} else {
+								t.$confirm(res.response.operationResult.srvData.titleStr, '操作提示', {
+									confirmButtonText: '确定',
+									cancelButtonText: '取消',
+									dangerouslyUseHTMLString: true,
+									type: 'warning'
+								})
+									.then(() => {
+										t.opClick('acceptBill', b, res.response.operationResult.srvData.examinCode);
+									})
+									.catch(() => {});
+							}
+						});
+						break;
+					case 'assessItem': //评价项目点选
+						let temp = t.tagData.evaluate.fqualch.find(o => {
+							return o.id === b.data.id;
+						});
+						if (t.comm.IsNullOrEmpty(temp)) {
+							t.tagData.evaluate.fqualch.push(b.data);
+							b.dom.path[0].className = 'check';
+						} else {
+							t.comm.ArrayRemove(t.tagData.evaluate.fqualch, o => {
+								return o.id === b.data.id;
+							});
+							b.dom.path[0].className = '';
+						}
+						break;
+					case 'assessExit': //评价窗口取消
+						t.tagData.evaluate.visible = !1;
+						break;
+					case 'assessConfirm': //评价数据提交
+						t.axios.post('/bill/ydj_merchantorder?operationno=evaluate', {selectedRows: [{pkValue: t.tagData.evaluate.id}], simpleData: {fqualstar: 'gradestar_0' + t.tagData.evaluate.fqualstar, fqual: _.map(t.tagData.evaluate.fqualch, 'id').join(), fqual_txt: _.map(t.tagData.evaluate.fqualch, 'name').join(), fevaludesc: t.tagData.evaluate.fevaludesc}}).then(res => {
+							t.tagData.evaluate.visible = !1;
+							t.uiData.fqualstar.id = 'gradestar_0' + t.tagData.evaluate.fqualstar;
+							t.uiData.fevaludesc = t.tagData.evaluate.fevaludesc;
+						});
+						break;
+					case 'alookDoneCode': //查看完工码
+						t.tagData.done = {code: b || '000000', visible: !0};
+						break;
+					case 'feedback': //反馈
+						t.$router.push({
+							path: '/order/cre-problem',
+							query: {
+								orderId: b.fbillhead_id
+							}
+						});
+						break;
+					case 'applyRefund': //申请退款
+						t.$router.push({
+							path: '/droit/cre-refund',
+							query: {
+								orderId: b.fbillhead_id
+							}
+						});
+						break;
+					case 'republish':
+						t.$confirm('确定将未完成的项目重新下单吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						})
+							.then(() => {
+								t.axios.post('/bill/ydj_merchantorder?operationno=releaseorder', {selectedRows: [{pkValue: b.fbillhead_id}]}).then(res => {
+									t.$router.push({path: '/order/pre-order', query: {id: res.data.operationResult.srvData}});
+								});
+							})
+							.catch(() => {});
+						break;
+					case 'lookfishang':
+						this.$alert(b.fhang, '挂起原因', {
+							confirmButtonText: '确定',
+							callback: () => {}
+						});
+						break;
+				}
+			}
+		},
+		components: {BreadCrumb, Menu, Timer},
+		computed: {
+			TabsWatch() {
+				return this.tagData.tA;
+			},
+			assess() {
+				if (this.tagData.evaluate) {
+					return this.tagData.evaluate.fquallist.filter(o => {
+						return this.tagData.evaluate.fqualstar > 3 ? parseInt(o.id.substring(5)) > 5 : parseInt(o.id.substring(5)) < 6;
+					});
+				}
+			}
+		},
+		watch: {
+			$route(to, from) {
+				let t = this;
+				if (this.comm.IsNullOrEmpty(to.query.type)) {
+					this.queryInit('tabs', from.params.tab || 'zero', this);
+				} else {
+					this.queryInit('menus', to.query.type, this);
+					switch (to.query.type) {
+						case 'HuOrder':
+							document.title = '商户通管理系统 - 挂起单';
+							break;
+						case 'ExOrder':
+							document.title = '商户通管理系统 - 取消单';
+							break;
+					}
+				}
+			},
+			TabsWatch(val) {
+				this.$store.commit('pageStatus', {orderTab: val});
+			},
+			assess() {
+				this.tagData.evaluate.fqualch = [];
+			}
+		}
+	}
+];
+export default listView;
+</script>
+
+<style lang="scss">
+.order-list {
+	.el-dialog__body {
+		.donecode {
+			width: 268px;
+			height: 118px;
+			border: 1px solid #ccc;
+			margin: 40px auto;
+			font-size: 48px;
+			line-height: 118px;
+			border-radius: 8px;
+		}
+	}
+	.order-item {
+		th {
+			button {
+				background-color: #0086e4;
+				width: 88px;
+				height: 30px;
+				line-height: 30px;
+				border-radius: 4px;
+				border: 0;
+				color: #fff;
+				display: block;
+				position: absolute;
+				right: 62px;
+				top: 6px;
+			}
+			a.icon {
+				background-position: -3px -156px;
+				width: 18px;
+				height: 16px;
+				display: block;
+				position: absolute;
+				right: 16px;
+				top: 12px;
+			}
+			a.icon.cur {
+				background-position: -3px -128px;
+			}
+		}
+	}
+}
+</style>

@@ -1,0 +1,167 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main-content w block-center orderdetail" v-if="!comm.IsNullOrEmpty(uiData.fservicetype)">
+      <el-dialog title="驳回原因" v-if="!comm.IsNullOrEmpty(tagData.reject)" :visible.sync="tagData.reject.visible">
+        <p class="color-red margin-bottom">请填写驳回原因，提交后将通知到对应的师傅</p>
+        <el-input type="textarea" v-model="tagData.reject.desc" placeholder="驳回原因" :rows="4" :maxlength="500"></el-input>
+        <span slot="footer">
+          <el-button @click="opClick('rejectExit')">取 消</el-button>
+          <el-button type="primary" @click="opClick('rejectConfirm')">确定</el-button>
+        </span>
+      </el-dialog>
+      <div class="summary margin-vertical" v-if="!comm.IsNullOrEmpty(uiData.fhandlestatus)">
+        <h4 v-html="progress.t"></h4>
+        <p v-html="progress.m"></p>
+        <div>
+          <button v-if="progress.b!=null" @click="opClick(progress.b.b)">{{progress.b.a}}</button>
+          <label v-if="progress.mb.length>0" class="color-grey">
+            您还可以<a href="javascript:void(0)" v-for="item in progress.mb" :key="item.b" @click="opClick(item.b)">{{item.a}}</a>
+          </label>
+        </div>
+      </div>
+      <div class="title border-bottom-solid margin-bottom">补价信息</div>
+      <p>补价原因:<span class="bold">{{uiData.fchangereason}}</span></p>
+      <table cellpadding="0" cellspacing="0" class="table theme-bluegray margin-vertical">
+        <colgroup>
+          <col width="285">
+          <col width="285">
+          <col width="285">
+          <col width="285">
+        </colgroup>
+        <tr>
+          <th>服务类目</th>
+          <th>单位</th>
+          <th>数量</th>
+          <th>金额</th>
+        </tr>
+        <tr :key="item.id" v-for="item in uiData.fentity">
+          <td>{{item.fseritemid.fname}}</td>
+          <td>{{item.funitid.fname}}</td>
+          <td>原数量：{{item.fqty}}<br /> 修改数量:<span class="color-red">{{item.fqty_chg}}</span></td>
+          <td><br />源金额：{{item.fqty*item.forderprice}}<br />增补金额：<span class="color-red">{{comm.priceSum((item.fqty_chg-item.fqty)*item.forderprice,2)}}</span><br />修改后金额：<span class="color-red">{{comm.priceSum(item.fqty_chg*item.forderprice,2)}}</span><br /><br /></td>
+        </tr>
+      </table>
+      <div class="title border-bottom-solid margin-bottom">订单信息</div>
+      <ul class="list border-bottom-dashed margin-bottom padding-bottom">
+				<li>商户订单：{{tagData.orderBase.mobillno}}</li>
+				<li>服务单号：{{tagData.orderBase.serbillno}}</li>
+        <li>客户姓名：{{uiData.fcustname}}</li>
+        <li>联系电话：{{uiData.fphone}}</li>
+        <li>客户地址：{{uiData.faddress}}</li>
+      </ul>
+      <div class="title border-bottom-solid margin-bottom">服务需求</div>
+      <ul class="list border-bottom-dashed margin-bottom padding-bottom">
+        <li>服务类型：<span class="color-blue">{{tagData.orderBase.fservicetype}}</span></li>
+        <li>订单金额：<span class="color-blue">¥{{tagData.orderBase.fexpectamount}}</span></li>
+        <li>期望服务日期：{{tagData.orderBase.forderdate}}</li>
+        <li>订单备注：{{tagData.orderBase.fcareful}}</li>
+      </ul>
+      <div class="title border-bottom-solid margin-bottom">安装信息</div>
+      <ul class="list border-bottom-dashed margin-bottom padding-bottom">
+        <li>安装日期：{{tagData.orderBase.fservicedate}}</li>
+        <li>安装师傅：{{tagData.orderBase.fmaster_name}}</li>
+        <li>联系电话：{{tagData.orderBase.fmaster_phone}}</li>
+      </ul>
+    </div>
+  </div>
+</template>
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import ImgRender from '../../../components/imagerender';
+import {billView as base} from '../../../lib';
+import detailPlugIn from './detailPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ydj_servicechange';
+billView.plugs = [new detailPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			getData() {
+				let t = this;
+				t.axios.post('/bill/ydj_merchantorder?operationno=GetMOrderAndOrderBaceInfo', {simpleData: {fmerchantid: t.$store.state.userCtx.linkIdentity.id, fbillno: t.uiData.fmerbill}}).then(res => {
+					t.tagData.orderBase = res.data.operationResult.srvData;
+				});
+			},
+			opClick(type, data) {
+				let t = this;
+				switch (type) {
+					case 'payOrder': //支付订单
+						t.$confirm('本次支付将您的账户余额中扣除费用，您确定支付？', '操作提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
+							.then(() => {
+								t.axios.post('/bill/ydj_servicechange?operationno=servicechangeAudit', {selectedRows: [{pkValue: t.uiData.id}]}).then(res => {
+									let srvData = res.data.operationResult.srvData;
+									if (srvData.fpay === 1) {
+										t.$confirm('由于您的账户余额不足，你还需要支付' + srvData.famount + '元，确定支付？', '余额不足', {
+											confirmButtonText: '去支付',
+											cancelButtonText: '取消',
+											type: 'warning'
+										}).then(() => {
+											this.$router.push({
+												path: '/pay',
+												query: {
+													id: t.uiData.id,
+													price: srvData.famount,
+													number: t.uiData.fbillno,
+													phone: t.uiData.fphone,
+													name: t.uiData.fcustname,
+													ybill: t.uiData.fmerbill,
+													ordertype: 'ydj_servicechange'
+												}
+											});
+										});
+									} else {
+										window.location.reload();
+									}
+								});
+							})
+							.catch(() => {});
+						break;
+					case 'reject': //驳回
+						t.tagData.reject = {visible: !0, desc: ''};
+						break;
+					case 'rejectExit': //驳回窗口取消
+						t.tagData.reject = {visible: !1, desc: ''};
+						break;
+					case 'rejectConfirm': //驳回数据提交
+						if (t.comm.IsNullOrEmpty(t.tagData.reject.desc)) {
+							t.$message({
+								message: '请填写驳回原因',
+								type: 'warning'
+							});
+							return;
+						}
+						t.axios.post('/bill/ydj_servicechange?operationno=unauditbycustomer', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: t.uiData.id}], simpleData: {opDesc: t.tagData.reject.desc}}).then(res => {
+							window.location.reload();
+						});
+						break;
+				}
+			}
+		},
+		computed: {
+			progress() {
+				let t = this;
+				let status = t.uiData.fhandlestatus.id;
+				let binPrice=0;
+				t.uiData.fentity.forEach(o=>{
+					binPrice+=(o.fqty_chg-o.fqty)*o.forderprice;
+				});
+				switch (status) {
+					case 'premium_status01':
+						return {t: '您当前需要增补金额：<span class="color-red">' +t.comm.priceSum(binPrice,2) + '元</span>', m: '请您尽快确认补价金额，并支付托管费用。以免因延误支付影响您的订单安装进度！', b: {a: '确认支付', b: 'payOrder'}, mb: [{a: '驳回', b: 'reject'}]};
+					case 'premium_status02':
+						return {t: '补价成功', m: '您已经同意了师傅的本次补价金额为<span class="color-red">' + t.comm.priceSum(binPrice,2) + '元</span>', mb: []};
+					case 'premium_status05':
+						return {t: '您驳回了师傅的补价', m: '驳回原因：'+t.uiData.funauditreason, mb: []};
+					default:
+						return {t: ''};
+				}
+			}
+		},
+		components: {BreadCrumb, ImgRender}
+	}
+];
+export default billView;
+</script>

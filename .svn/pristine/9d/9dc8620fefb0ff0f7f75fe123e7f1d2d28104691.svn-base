@@ -1,0 +1,77 @@
+/**
+ * Created by linus at 20171208
+ */
+import Vue from 'vue';
+import _ from 'lodash';
+import VuexPersistedState from 'vuex-persistedstate';
+import Vuex from 'vuex';
+
+Vue.use(Vuex);
+
+// 生成 mutations 方法
+function generate(name) {
+  return function (state, value) {
+    if (_.isObjectLike(value)) {
+      state[name] = _.assign(state[name] || {}, value);
+    }
+    else {
+      state[name] = value || state[name];
+    }
+  };
+}
+
+const options = {
+  strict: true,
+
+  // 多页面共享数据
+  state: {
+    //登录成功后用户上下文信息对象
+    userCtx: {
+      userId: '',
+      userName: '',//用户账号
+      displayName: '',//名字
+      userHead:'',
+      isLoggedIn: false,
+      isPlatform: false,
+      platformCode: '425035663272972289',
+      platformdealer:'425236371930746886',
+      upApi: {},
+      // 关联业务身份信息：对于商户通这里就是商户资料
+      linkIdentity: {},
+      company: {},
+      companys: []
+    },
+    header:{
+      caption:''
+    },
+    message: '',
+    pageStatus: {
+      orderTab:'',
+      history:''
+    }
+  },
+  // 操作
+  actions: {},
+
+  // 数据变更
+  mutations: {},
+
+
+  plugins: [VuexPersistedState({
+    storage: window.sessionStorage,
+    paths: ['userCtx']
+  })]
+};
+
+
+
+// 为每个 state 字段生成对应的 mutations 方法
+Object.keys(options.state).forEach((key) => {
+  options.mutations[key] = generate(key);
+});
+
+
+// 创建一个 store 对象用于管理应用状态
+const store = new Vuex.Store(options);
+
+export default store;

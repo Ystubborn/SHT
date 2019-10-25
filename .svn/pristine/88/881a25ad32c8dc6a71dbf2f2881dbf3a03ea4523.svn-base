@@ -1,0 +1,335 @@
+<template>
+  <div class="register">
+    <div class="w block-center">
+      <div class="title relative">欢迎注册商家通账号
+        <div class="absolute right top">已有商家通账号，
+          <router-link to="login">快速登录</router-link>
+        </div>
+      </div>
+      <div class="progress">
+        <el-steps :active="active" align-center finish-status="success">
+          <el-step title="验证手机号"></el-step>
+          <el-step :title=" (usertype || 0)==0?'设置密码':'完善信息'"></el-step>
+          <el-step title="注册成功"></el-step>
+        </el-steps>
+      </div>
+      <Agreement title="商户注册服务协议" :visible.sync="visible" show="register"></Agreement>
+      <el-form :model="block_one" v-if="active===0" :rules="rules" ref="block_one" label-width="160px" class="block-center">
+        <el-form-item label="手机号" prop="phone" :rules="comm.rules.phone" is-required>
+          <el-input v-model="block_one.phone" placeholder="请填写注册手机号"></el-input>
+        </el-form-item>
+        <el-form-item label="验证码" prop="verifCode" :rules="comm.rules.code" is-required>
+          <Verifcode :value.sync="block_one.verifCode" :phone="block_one.phone"></Verifcode>
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox label="我同意" @change="OtherClick('agreement')" v-model="block_one.agreementBoll"></el-checkbox>
+          <a @click="visible =!0" href="javascript:void(0)">《商户注册服务协议》</a>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :disabled="block_one.nextDisabled" @click="OtherClick('next')">下一步</el-button>
+        </el-form-item>
+      </el-form>
+      <el-form :model="block_two" v-if="active===1" :rules="rules" ref="block_two" label-width="160px" class="block-center">
+        <div v-if="usertype==1">
+          <el-form-item label="注册类型" prop="merchantVal" is-required>
+            <el-select v-model="block_two.merchantVal" placeholder="请选择注册类型">
+              <el-option v-for="item in block_two.merchant" :key="item.a" :label="item.b" :value="item.a"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="服务性质" prop="serverNature" is-required>
+            <el-select v-model="block_two.serverNature" placeholder="请选择服务性质">
+              <el-option v-for="item in block_two.serverN" :key="item.a" :label="item.b" :value="item.a"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="企业代码" prop="joinEnterpriseId" is-required>
+            <el-input v-model="block_two.joinEnterpriseId" placeholder="请填写注册企业代码"></el-input>
+          </el-form-item>
+          <el-form-item label="商家名称" prop="merchantName" is-required>
+            <el-input v-model="block_two.merchantName" placeholder="请填写商家名称"></el-input>
+          </el-form-item>
+          <el-form-item label="商家联系人" prop="merchantContact" is-required>
+            <el-input v-model="block_two.merchantContact" placeholder="请填写商家联系人"></el-input>
+          </el-form-item>
+          <el-form-item label="所在地" prop="city.fcity" is-required>
+            <City v-model="city"></City>
+          </el-form-item>
+        </div>
+        <el-form-item label="密码" prop="password" :rules="comm.rules.pwd" is-required>
+          <el-input type="password" v-model="block_two.password" placeholder="请填写密码"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="repassword" is-required>
+          <el-input type="password" v-model="block_two.repassword" placeholder="请再次填写密码"></el-input>
+        </el-form-item>
+        <el-form-item v-if="false">
+          <el-input type="text"> </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="OtherClick('register')">下一步</el-button>
+        </el-form-item>
+      </el-form>
+      <el-form class="success" v-if="active===2">
+        <i class="el-icon-success"></i>
+        <span>恭喜您，您已成功注册商家通！</span>
+        <el-button type="primary" @click="OtherClick('login')">立即下单</el-button>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+	data() {
+		return {
+			usertype: 0, //用户注册类型 0普通用户 1VIP用户
+			active: 0, //步骤状态
+			visible: !1, //协议窗口控制
+			city: [],
+			block_one: {
+				phone: '',
+				verifCode: '',
+				agreementBoll: false,
+				nextDisabled: true //下一步按钮
+			},
+			block_two: {
+				merchant: [
+					//商家类型选项
+					{
+						a: 'merchant_type01',
+						b: '商家'
+					},
+					{
+						a: 'merchant_type02',
+						b: '厂家'
+					},
+					{
+						a: 'merchant_type03',
+						b: '电商'
+					},
+					{
+						a: 'merchant_type04',
+						b: '装修公司'
+					},
+					{
+						a: 'merchant_type05',
+						b: '个人'
+					}
+				],
+				serverN: [
+					{
+						a: 'merchant_servernature01',
+						b: '全屋整装'
+					},
+					{
+						a: 'merchant_servernature02',
+						b: '定制家具'
+					},
+					{
+						a: 'merchant_servernature03',
+						b: '橱柜'
+					},
+					{
+						a: 'merchant_servernature04',
+						b: '门窗'
+					},
+					{
+						a: 'merchant_servernature05',
+						b: '成品柜类'
+					}
+				],
+				merchantVal: '',
+				serverNature: '', //服务性质
+				joinEnterpriseId: '', //企业代码
+				merchantName: '', //商家名称
+				merchantContact: '', //商家联系人
+				city: {
+					fprovince: '',
+					fcity: '',
+					fregion: ''
+				},
+				password: '', //密码
+				repassword: '' //确认密码
+			},
+			rules: {
+				merchantVal: [{required: true, message: '请选择注册类型', trigger: 'blur'}],
+				serverNature: [{required: true, message: '请选择服务性质', trigger: 'blur'}],
+				joinEnterpriseId: [{required: true, message: '请输入注册企业代码', trigger: 'blur'}],
+				merchantName: [{required: true, message: '请输入商家名称', trigger: 'blur'}],
+				merchantContact: [{required: true, message: '请输入商家联系人', trigger: 'blur'}],
+				'city.fcity': [{required: true, message: '请至少选择至市', trigger: 'change'}],
+				repassword: [
+					{
+						validator: (a, b, c) => {
+							if (!this.comm._RegExp.isPwd.test(b)) {
+								return c(new Error('请输入6到16位长度的密码'));
+							}
+							if (b !== this.block_two.password) {
+								return c(new Error('两次输入密码不一致'));
+							}
+							c();
+						},
+						trigger: 'blur'
+					}
+				]
+			}
+		};
+	},
+	methods: {
+		OtherClick(a) {
+			let t = this;
+			switch (a) {
+				case 'agreement':
+					t.block_one.nextDisabled = !t.block_one.agreementBoll;
+					break;
+				case 'next':
+					t.$refs['block_one'].validate(valid => {
+						if (!valid) {
+							return false;
+						}
+						t.axios.get('/sms/code/validate.json?mobilePhone=' + t.block_one.phone.trim() + '&authCode=' + t.block_one.verifCode, {}).then(res => {
+							if (res.data.operationResult.isSuccess === true) {
+								t.active = 1;
+							} else {
+								t.$message.error('验证码错误');
+							}
+						});
+					});
+					break;
+				case 'register':
+					t.$refs['block_two'].validate(valid => {
+						if (!valid) {
+							return false;
+						}
+						t.axios
+							.post('/reguser', {
+								activeCode: t.block_one.verifCode,
+								company: '',
+								joinCode: t.block_one.verifCode,
+								phoneNumber: t.block_one.phone,
+								userName: t.block_one.phone,
+								userType: '32768',
+								passWord: t.block_two.password,
+								rePassword: t.block_two.repassword,
+								meta: {
+									registerRole: '商户通用户',
+									merchant_type: t.usertype == 0 ? 'merchant_type05' : t.block_two.merchantVal,
+									joinEnterpriseId: t.usertype == 0 ? t.$store.state.userCtx.platformCode : t.block_two.joinEnterpriseId,
+									fname: t.usertype == 0 ? t.block_one.phone : t.block_two.merchantName,
+									fduty: t.usertype == 0 ? t.block_one.phone : t.block_two.merchantContact,
+									fservernature: t.block_two.serverNature,
+									fphone: t.block_one.phone,
+									fprovince: t.block_two.city.fprovince,
+									fcity: t.block_two.city.fcity,
+									fregion: t.block_two.city.fregion,
+									faddress: ''
+								}
+							})
+							.then(res => {
+								if (res && res.status == '200') {
+									t.active = 2;
+								}
+							})
+							.catch(error => {
+								t.$message({
+									message: '您的帐号已注册，请直接登录!',
+									type: 'error'
+								});
+							});
+					});
+					break;
+				case 'login':
+					t.authService
+						.login({
+							userName: t.block_one.phone,
+							password: t.block_two.password
+						})
+						.then(data => {
+							t.$localStorage.set('loginUserList', JSON.stringify([t.block_one.phone]));
+							t.$localStorage.set('userName', t.block_one.phone);
+							t.$store.commit('header', {caption: ''});
+							t.$router.push({
+								path: '/home'
+							});
+						});
+					break;
+
+				default:
+					break;
+			}
+		}
+	},
+	watch: {
+		city(v) {
+			this.block_two.city.fprovince = v[0] || '';
+			this.block_two.city.fcity = v[1] || '';
+			this.block_two.city.fregion = v[2] || '';
+		}
+	},
+	created() {
+		this.usertype = this.$route.query.type || 0;
+		this.$store.commit('header', {caption: '欢迎注册左右手下单系统'});
+	},
+	dependencies: ['authService']
+};
+</script>
+
+<style lang="scss">
+.register {
+	padding-top: 20px;
+	> div {
+		width: 1120px;
+		border-top: 2px #409eff solid;
+		min-height: 700px;
+		background: #fff;
+		padding: 40px;
+	}
+	.title {
+		height: 60px;
+		line-height: 60px;
+		font-size: 24px;
+		border-bottom: 1px #cacccd solid;
+		> div {
+			position: absolute;
+			font-size: 14px;
+		}
+		a {
+			color: #0086e4;
+			text-decoration: none;
+			position: relative;
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+	.success {
+		margin: 50px auto;
+		i {
+			color: #5bc92e;
+			font-size: 45px;
+			margin-left: 50px;
+			display: inline-block;
+		}
+		> span {
+			font-size: 24px;
+			margin-left: 20px;
+			display: inline-block;
+			height: 45px;
+			line-height: 45px;
+			vertical-align: top;
+		}
+		button.el-button--primary {
+			margin-left: 80px;
+			margin-top: 80px;
+		}
+	}
+	.el-form {
+		width: 540px;
+		a {
+			color: #0086e4;
+		}
+		button.el-button--primary,
+		.el-select {
+			width: 380px;
+		}
+	}
+}
+</style>

@@ -1,0 +1,425 @@
+<template>
+  <div>
+    <BreadCrumb :data="crumb"></BreadCrumb>
+    <div class="w block-center pay">
+      <div class="banner">本次需支付：<span class="color-red">{{this.$route.query.price}}</span>元</div>
+      <ul class="sologon">
+        <li v-if="!comm.IsNullOrEmpty(detail.master)">奖赏师傅：{{detail.master}}</li>
+        <li>订单号：　{{detail.number}}</li>
+        <li>客户：　　{{detail.name}}</li>
+        <li>电话：　　{{detail.phone}}</li>
+        <li v-if="!comm.IsNullOrEmpty(detail.address)">安装信息：{{detail.address}}</li>
+        <li v-if="!comm.IsNullOrEmpty(detail.ybill)">源订单号：{{detail.ybill}}</li>
+      </ul>
+      <div class="paytype border-bottom-dashed">
+        <label>支付方式</label>
+        <Radio type="border" class="paytype-item" v-model="paytype">
+          <div v-for="item in paytypeList" :key="item.a" :value="item.a"></div>
+        </Radio>
+      </div>
+      <div v-if="coupon.data.length>0&&detail.ordertype==='ydj_merchantorder'" class="margin-top">
+        <el-checkbox :value="coupon.active">使用现金券</el-checkbox>
+        <div class="margin-top">
+          <Radio type="border" v-model="coupon.activeItem" :exit="true" class="coupon">
+            <div v-for="item in coupon.data" :key="item.fentryid" :value="item.fentryid">
+              <h3 class="color-blue font20">{{item.fcashamount}}</h3>
+              <p>{{item.fname}}</p>
+              <p>{{item.fenddate}}过期</p>
+            </div>
+          </Radio>
+        </div>
+      </div>
+      <div v-if="detail.ordertype==='ydj_merchantorder'" class="margin-top">
+        <el-checkbox v-model="balance.active">使用账户余额</el-checkbox>
+        <div class="pricesum"><i class="icon"></i>账户余额：<em></em>{{balance.data}}元</div>
+      </div>
+      <div class="pay-button-panel">
+        <button class="pay-button-one" @click="opClick('confirmPay')">确认支付</button>
+        <button class="pay-button-two" @click="opClick('goBack')">暂不支付，返回上一步</button>
+      </div>
+      <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="700px" center :before-close="opClick('payClose')">
+        <div class="wechatpay">
+          <div class="code">
+            <div ref="qrcode" class="qrcode"></div>
+            <p>打开微信扫一扫</p>
+          </div>
+        </div>
+      </el-dialog>
+      <el-dialog title="费用清单" :visible.sync="insure.visible" center :close-on-click-modal="false">
+        <div class="insureprice">
+          <ul>
+            <li><label>订单金额：</label><span class="color-red">¥{{detail.price}}</span></li>
+            <li v-if="String(detail.islogistics) == 'true'"><label>运送保险：</label><span class="color-red">10元/单</span>
+              <el-checkbox v-model="insure.active"></el-checkbox><a class="color-blue" href="javascript:void(0)" @click="transportVisible=!0">运送保详情>></a>
+              <div class="color-grey">保障提货至安装地点货物运送的安全，每单最高赔付500元</div>
+            </li>
+            <li v-if="coupon.active">
+              <label>现金券抵扣：</label><span class="color-red">-{{coupon.price}}元</span>
+            </li>
+            <li><label>第三方责任险：</label>平台赠送<span class="color-red delete-line">3元/单</span>
+              <el-checkbox :value="true"></el-checkbox><a class="color-blue" href="javascript:void(0)" @click="thirdVisible=!0">第三方责任险协议>></a>
+              <div class="color-grey"><i class="icon"></i>人/财保障，免费赠送，最高赔付30万元。</div>
+            </li>
+          </ul>
+          <div class="footer">
+            实际支付：<span class="color-red">¥{{total=comm.priceSum((insure.active==!0? Number(Number(detail.price)+10).toFixed(2):Number(detail.price).toFixed(2))-coupon.price,2)}}</span>
+          </div>
+        </div>
+        <div slot="footer">
+          <el-button type="orange" size="medium" @click="opClick('confirmPay')">立即支付</el-button>
+        </div>
+      </el-dialog>
+      <Agreement title="第三方责任险协议" :visible.sync="thirdVisible" show="third"></Agreement>
+      <Agreement title="左右手平台运送保服务协议" :visible.sync="transportVisible" show="transport"></Agreement>
+    </div>
+  </div>
+</template>
+
+<script>
+import BreadCrumb from '../../components/breadcrumb';
+import Radio from '../../components/radio';
+import Agreement from '../../components/agreement';
+import QRCode from 'qrcodejs2';
+export default {
+	data() {
+		return {
+			crumb: [{a: '订单管理', b: {path: '/order', name: 'order', params: {tab: this.$store.state.pageStatus.orderTab}}}, {a: '订单支付'}],
+			detail: {},
+			dialogVisible: false,
+			paytype: 'Alipay',
+			dialogTitle: '微信支付',
+			paytypeList: [{a: 'Alipay', b: '支付宝'}, {a: 'WeChat', b: '微信支付'}],
+			settimer: true,
+			history: {path: '/order'},
+			coupon: {
+				//现金券
+				active: !1,
+				data: [],
+				activeItem: '',
+				price: 0
+			},
+			balance: {
+				//余额
+				data: 0,
+				active: !1
+			},
+			insure: {
+				//物流保险
+				active: !1,
+				visible: !1
+			},
+			thirdVisible: !1,
+			transportVisible: !1,
+			total: 0
+		};
+	},
+	mounted() {
+		this.detail = this.$route.query || {};
+		this.axios.post('/dynamic/' + this.detail.ordertype + '?operationno=getcashcoupons', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: this.detail.id}]}).then(res => {
+			this.coupon.data = res.data.operationResult.srvData.date;
+		});
+		let merchantId = this.$store.state.userCtx.linkIdentity.id;
+		this.axios.post('/dynamic/pay_settleorder?operationno=querybalance', {loadingOption: {target: '.element-loading'}, simpleData: {customerId: merchantId}}).then(res => {
+			this.balance.data = Number(res.data.operationResult.srvData.balance).toFixed(2);
+		});
+	},
+	methods: {
+		paySuccess() {
+			let t = this;
+			setTimeout(function() {
+				if (!t.settimer) {
+					return;
+				}
+				t.axios.post('/bill/' + t.detail.ordertype + '?operationno=checkIsPaySuccess', {loadingOption: {target: '.element-loading'}, selectedRows: [{pkValue: (t.$route.query || {id: ''}).id}]}).then(res => {
+					if (res.data.operationResult.srvData.isPaySuccess !== true) {
+						t.paySuccess();
+					} else {
+						t.$router.push(t.history);
+					}
+				});
+			}, 2000);
+		},
+		opClick(type, data) {
+			let t = this;
+			switch (type) {
+				case 'payChange':
+					t.paytype = data.a;
+					t.dialogTitle = data.b;
+					break;
+				case 'payClose':
+					t.settimer = !1;
+					break;
+				case 'confirmPay':
+					if (t.insure.visible === false && t.detail.ordertype === 'ydj_merchantorder') {
+						t.insure.visible = !0;
+						return;
+					}
+					let sd = {fpaymethod: t.paytype, fid: t.detail.id, fisbalancepayment: t.balance.active === true ? 1 : 0};
+					if (t.coupon.active == !0) {
+						sd.fcashcouponsid = t.coupon.activeItem;
+					}
+					if (t.insure.active === true) {
+						sd.fisbuyinsurance = 1;
+					}
+					t.axios.post('/bill/' + t.detail.ordertype + '?operationno=orderPay', {loadingOption: {target: '.element-loading'}, simpleData: sd}).then(res => {
+						if (t.paytype === 'WeChat') {
+							this.dialogVisible = !0;
+						}
+						if (t.comm.IsNullOrEmpty(res.data.operationResult.srvData)) {
+							t.$alert('您已成功托管本单安装费' + t.total + '元，已从钱包中扣除，待师傅预约上门！', '支付成功', {
+								confirmButtonText: '确定',
+								callback: action => {
+									t.$router.push(t.history);
+								}
+							});
+							return;
+						}
+						let srvData = res.data.operationResult.srvData.data;
+						if (t.paytype === 'Alipay') {
+							localStorage.setItem('Alipay', JSON.stringify(t.history));
+							//支付宝支付最终回调地址 /payback
+							window.location.href = srvData;
+							return;
+						}
+						if (t.paytype === 'WeChat') {
+							this.$refs.qrcode.innerHTML = '';
+							let a = res.data.operationResult.srvData.data;
+							new QRCode(this.$refs.qrcode, {
+								width: 200,
+								height: 200, // 高度
+								text: a // 二维码内容
+							});
+							t.settimer = !0;
+							t.paySuccess();
+						}
+					});
+					break;
+				case 'goBack':
+					t.$router.push(t.history);
+					break;
+				default:
+					break;
+			}
+		}
+	},
+	beforeRouteEnter(to, from, next) {
+		next(v => {
+			if (from.path !== '/') {
+				//v.history= from;  Cannot assign to read only property 'path' of object '#<Object>'
+				v.history = {path: from.path, name: from.name, params: v.comm.IsNullOrEmpty(from.params) ? {tab: v.$store.state.pageStatus.orderTab} : from.params, query: from.query};
+			}
+		});
+	},
+	beforeDestroy() {
+		this.settimer = !1;
+	},
+	computed: {
+		couponActive() {
+			return this.coupon.activeItem;
+		}
+	},
+	watch: {
+		couponActive(v) {
+			this.coupon.price = Number(
+				this.comm.Odefault(
+					this.coupon.data.find(o => {
+						return o.fentryid === v;
+					}),
+					'fcashamount',
+					'0'
+				)
+			);
+			this.coupon.active = !this.comm.IsNullOrEmpty(v);
+		}
+	},
+	components: {BreadCrumb, Radio, Agreement}
+};
+</script>
+<style lang="scss">
+.pay {
+	background-color: #fff;
+	padding: 40px;
+	.banner {
+		height: 100px;
+		background: #fffdee;
+		border: 1px solid #edd28b;
+		font-size: 24px;
+		color: #666;
+		line-height: 100px;
+		text-indent: 30px;
+	}
+	.sologon {
+		margin-top: 15px;
+		background: #f5f5f5;
+		border: 1px solid #e8e8e8;
+		padding: 15px 0;
+		li {
+			height: 28px;
+			line-height: 28px;
+			padding-left: 30px;
+			font-size: 15px;
+		}
+	}
+	.pricesum {
+		border: 1px solid #ff6d22;
+		padding: 20px 15px 20px 45px;
+		margin-top: 15px;
+		font-size: 16px;
+		height: 26px;
+		position: relative;
+		line-height: 26px;
+		& > em {
+			border-left: 1px solid #d7d7d7;
+			margin: 0 10px;
+		}
+		.icon {
+			background-position: -341px -38px;
+			width: 26px;
+			height: 26px;
+			display: block;
+			position: absolute;
+			left: 15px;
+			top: 20px;
+		}
+	}
+	.paytype {
+		position: relative;
+		padding: 20px 100px 20px 100px;
+		margin-top: 20px;
+		.paytype-item {
+			& > * {
+				width: 154px;
+				height: 44px;
+				border-radius: 4px;
+				border: 1px solid #e8e8e8;
+				display: inline-block;
+				margin-right: 24px;
+				background-image: url(../../assets/images/icon.png);
+				&:nth-child(1) {
+					background-position: -146px -180px;
+				}
+				&:nth-child(2) {
+					background-position: -310px -180px;
+				}
+				&.check {
+					border-color: #409eff;
+					position: relative;
+				}
+				&.is-active {
+					border-color: #409eff;
+				}
+			}
+		}
+		label {
+			position: absolute;
+			left: 0;
+			top: 20px;
+			height: 46px;
+			line-height: 46px;
+		}
+	}
+	.pay-button-panel {
+		padding-left: 100px;
+		padding-top: 40px;
+		.pay-button-one {
+			border: none;
+			cursor: pointer;
+			border-radius: 3px;
+			width: 114px;
+			height: 34px;
+			line-height: 1px;
+			background-color: #ff6d22;
+			color: #f5f5f5;
+			font-size: 14px;
+			margin-right: 8px;
+		}
+		.pay-button-two {
+			border: none;
+			cursor: pointer;
+			background-color: #fff;
+			color: #ff6d22;
+			font-size: 14px;
+		}
+	}
+	.coupon {
+		& > * {
+			width: 204px;
+			line-height: 24px;
+			padding: 15px 0;
+		}
+
+		h3 {
+			&::after {
+				content: '元';
+				font-size: 14px;
+			}
+		}
+	}
+	.wechatpay {
+		background: url(../../assets/images/wechatsao.png) top right no-repeat;
+		height: 420px;
+		.code {
+			padding-left: 30px;
+			padding-top: 64px;
+			width: 240px;
+			p {
+				line-height: 60px;
+				text-align: center;
+				font-size: 16px;
+			}
+		}
+		.qrcode {
+			width: 200px;
+			height: 200px;
+			padding: 19px;
+			border: 1px solid #e7e7ee;
+			margin-right: 50px;
+		}
+	}
+	.insureprice {
+		border: 1px solid #e7e7e7;
+		ul {
+			padding: 10px 20px;
+		}
+		li {
+			position: relative;
+			line-height: 36px;
+			padding-left: 120px;
+			label:first-child {
+				position: absolute;
+				left: 0;
+				text-align: right;
+				height: 36px;
+				width: 110px;
+			}
+			a {
+				position: absolute;
+				right: 0px;
+			}
+			.color-grey {
+				line-height: 16px;
+			}
+			.icon {
+				background-position: -405px -38px;
+				width: 16px;
+				height: 16px;
+				display: inline-block;
+				vertical-align: middle;
+				margin-right: 5px;
+			}
+		}
+		.footer {
+			background-color: #f5f5f5;
+			height: 40px;
+			line-height: 40px;
+			padding-left: 60px;
+			margin-top: 14px;
+			position: relative;
+			span {
+				position: absolute;
+				right: 20px;
+			}
+		}
+	}
+}
+</style>

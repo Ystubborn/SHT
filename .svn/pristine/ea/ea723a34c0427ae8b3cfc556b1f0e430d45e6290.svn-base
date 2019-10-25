@@ -1,0 +1,17 @@
+{
+  "vetur.format.defaultFormatter.html": "js-beautify-html",
+  "vetur.format.defaultFormatterOptions": {
+    "js-beautify-html": {
+      "wrap_attributes": "auto",
+      "wrap_line_length": 500
+    },
+    "prettier": {
+      "tabWidth": 2,
+      "printWidth": 500, //行 宽
+      "bracketSpacing": false, //是否用空格填充括弧与内容
+      "singleQuote": true, //是否用单引号替代双引号
+      "useTabs": true, //是否运用tabs
+      //"semi": true, //是否加分号
+    }
+  }
+}

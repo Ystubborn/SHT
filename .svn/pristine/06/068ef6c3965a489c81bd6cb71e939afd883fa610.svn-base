@@ -1,0 +1,16 @@
+import shtBillPlugIn from '../../plugIn/shtBillPlugIn';
+
+export default class detailPlugIn extends shtBillPlugIn {
+    constructor(options) {
+        super(options);
+    }
+    onInitUiModel(args) {
+        //临时数据包
+        args.tagData = {
+            crumb: [{ a: "附加费", b: { path: '/order/additional', name: "additional", params: { tab: this.$store.state.pageStatus.orderTab } } }, { a: "附加费详情" }],
+            reject: { desc: "", id: "", visible: !1 },//驳回项目
+            orderBase: {}
+        };
+        return super.onInitUiModel(args);
+    }
+}

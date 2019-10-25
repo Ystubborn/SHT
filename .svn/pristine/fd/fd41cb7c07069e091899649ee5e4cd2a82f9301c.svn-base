@@ -1,0 +1,156 @@
+import shtBillPlugIn from '../../plugIn/shtBillPlugIn';
+
+export default class placeOrderPlugIn extends shtBillPlugIn {
+    constructor(options) {
+        super(options);
+    }
+    onInitUiModel(args) {
+        let userCtx = this.$store.state.userCtx;
+        let phone = /^((\+?86)|(\(\+86\)))?1[3-9][0-9]{9}$/;
+        let t = this;
+        //临时数据包
+        args.tagData = {
+            crumb: [{ a: "订单管理", b: { path: '/order', name: "order", params: { tab: this.$store.state.pageStatus.orderTab } } }, { a: "立即下单" }],
+            city: [],
+            isSubmit: false,
+            serviceItem: {
+                visible: !1,
+                projectImage: [],//当前项图片
+                editItem: '',//当前项id
+                imageslist: [],//所有项目图片信息 临时存放
+                tData: []
+            },
+            serviceTypeInit: [],//已加载的服务定价数据
+            serviceTypeData: [],//存放服务定价数据
+            unitData:[],
+            serviceTypeMessage:''
+        };
+        args.rules = {
+            "fprofield.id": [{ required: true, message: '请选择服务项目' }],
+            fname: [{ required: true, message: '请填写客户姓名', trigger: 'blur' }],
+            fphone: [{
+                validator: (a, b, c) => {
+                    if (!phone.test(b)) {
+                        return c(new Error("客户手机号格式错误"));
+                    }
+                    c();
+                }, trigger: 'blur'
+            }],
+            "fregion.id": [{ required: true, message: '请选择完整的省市区', trigger: 'change' }],
+            fcusaddress: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
+            fserviceentry: [{
+                validator: (a, b, c) => {
+                    debugger
+                    if (t.comm.IsNullOrEmpty(b.fseritemid.id)) {
+                        return c(new Error('请选择服务类型'));
+                    }
+                    if (t.comm.IsNullOrEmpty(b.fmaterial.id)) {
+                        return c(new Error('请选择材质'));
+                    }
+                    if (parseFloat(b.fprice) < 0.01&&this.uiData.foffertype.id=='offer_type_01') {
+                        return c(new Error('请填写期望金额(不能小于1分钱)'));
+                    }
+                    c();
+                }, trigger: 'change'
+            }],
+            "fcareful": [{ required: true, message: '请填写注意事项', trigger: 'blur' }],
+            "furgentname": [{ required: true, message: '请填写紧急联系人信息', trigger: 'blur' }, {
+                validator: (a, b, c) => {
+                    if (!phone.test(this.uiData.furgentphone)) {
+                        return c(new Error('紧急联系人手机号格式错误'));
+                    }                     
+                    c();
+                }, trigger: 'blur'
+            }],
+            flogistics:[{ required: true, message: '请填写物流信息', trigger: 'blur' }],
+            fcollectadd:[{ required: true, message: '请填写提货地址', trigger: 'blur' }],
+            fcollectrel:[{ required: true, message: '请填写提货联系人', trigger: 'blur' }],
+            fcollectpho:[{
+                validator: (a, b, c) => {
+                    if (!/^0\d{2,3}-?\d{7,8}$/.test(b)&&!phone.test(b)) {
+                        return c(new Error("提货人电话格式错误"));
+                    }
+                    c();
+                }, trigger: 'blur'
+            }]
+        };
+        return super.onInitUiModel(args);
+    }
+
+    onAfterLoadModelData(args) {
+        if (!args) {
+            return;
+        }
+        let t = this;
+        t.getData('unit');
+        if (args.status == 'view') {
+            if (t.uiData.fserstatus.id !== 'sht_serstatus00') {
+                t.$router.push({ path: '/order/pre-orders', query: { id: t.uiData.id } })
+                return;
+            }
+            t.uiData.fserviceentry.forEach(o => {
+                o.fentityimage.url = '';
+                t.axios.post("/fileinfo", { loadingOption: { target: '.element-loading' }, fileId: o.fentityimage.id, thumbnail: false }).then(res => {
+                    let srvData = res.data.operationResult.srvData;
+                    o.fentityimage.url = srvData[0].url;
+                    let imgList = [];
+                    for (let i = 0; i < srvData.length; i++) {
+                        imgList.push({ id: srvData[i].fileId, url: srvData[i].url })
+                    }
+                    t.tagData.serviceItem.projectImage = [];
+                    t.tagData.serviceItem.imageslist.push({
+                        id: o.id,
+                        data: imgList
+                    });
+                });
+            });
+            t.tagData.city = [t.uiData.fprovince.id, t.uiData.fcity.id, t.uiData.fregion.id];
+            return super.onAfterLoadModelData(args);
+        }       
+        return super.onAfterLoadModelData(args);
+    }
+
+    onBeforeDoOperation(args) {
+        let t = this;
+        args.param.loadingOption = {
+            target: '.placeorder',
+            text: ''
+        }
+        switch (args.opcode) {
+            case 'save':
+                if (!t.tagData.isSubmit) {
+                    if (!args.param.simpleData) {
+                        args.param.simpleData = {};
+                    }
+                    args.param.simpleData.appId = "Other";
+                }
+                break;
+        }
+        return Promise.resolve(args);
+    }
+
+    onAfterDoOperation(args) {
+        let t = this;
+        let srvData = args.response.operationResult.srvData;
+        if (args.opcode === 'save') {
+            if (t.tagData.isSubmit) {
+                t.$router.push({ path: '/order/pre-orders', query: { id: srvData[0].id } })
+            }
+            else {
+                t.$router.push({ path: '/order', name: "order", params: { tab: 'one' } })
+            }
+        }
+        return Promise.resolve(args);
+    }
+    onRefresh(args) {
+        let t = this;
+        let linkIdentity = t.$store.state.userCtx.linkIdentity
+        if (linkIdentity) {
+            if (t.uiData.fmerchantid) {
+                t.uiData.fmerchantid.id = linkIdentity.id || '';
+                t.uiData.fmerchantid.fname = linkIdentity.name || '';
+            }
+        }
+        return Promise.resolve(args);
+    }
+}

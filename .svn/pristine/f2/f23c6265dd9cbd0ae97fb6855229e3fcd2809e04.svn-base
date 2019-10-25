@@ -1,0 +1,296 @@
+<template>
+  <div>
+    <BreadCrumb :data="crumb"></BreadCrumb>
+    <div class="main w block-center">
+      <Menu></Menu>
+      <div class="main-content-right wallet-right">
+        <el-dialog title="消费详情" :visible.sync="dialogVisible" width="820px" v-if="!comm.IsNullOrEmpty(detailData)">
+          <div class="summary font20" v-if="!comm.IsNullOrEmpty(detailData.fbizstatus.fname)">{{detailData.fbizstatus.fname}}</div>
+          <table cellpadding="0" cellspacing="0" class="table theme-gray font14 margin-top lineheight-three">
+            <colgroup>
+              <col width="389" />
+              <col width="389" />
+            </colgroup>
+            <tr>
+              <th colspan="2">消费详情</th>
+            </tr>
+            <tr>
+              <td colspan="2">
+                交易用途：{{detailData.fpurpose.fenumitem}}
+              </td>
+            </tr>
+            <tr>
+              <td>金　额：<span class="color-blue">{{detailData.fdirection.id==='direction_01'?'+':'-'}}{{detailData.famount}}</span></td>
+              <td>支付方式：{{detailData.fway.fname}}</td>
+            </tr>
+            <tr>
+              <td>订单单号：{{comm.Odefault(detailData,'forderno','无')}}</td>
+              <td>流水号：{{detailData.ftranid}}</td>
+            </tr>
+            <tr>
+              <td>创建时间：{{detailData.fcreatedate}}</td>
+              <td>交易时间：{{(detailData.fbizstatus && detailData.fbizstatus.id == 'bizstatus_02') ? detailData.fmodifydate : ''}}</td>
+            </tr>
+          </table>
+        </el-dialog>
+        <div class="wallet">
+          <div>
+            <h4 class="title">钱包余额</h4>
+            <div class="wallet-total color-grey">
+              <i class="icon icon-money"></i>可用余额: <span class="color-black" v-html="balance"></span>
+            </div>
+            <div class="wallet-foot">
+              <el-button type="orange" @click="opClick('pay')">充值</el-button>
+              <!-- <el-button type="orange" plain>提现</el-button> -->
+            </div>
+          </div>
+          <!-- <div>
+            <h4 class="title">VIP月结账单</h4>
+            <div class="wallet-total">
+              <i class="icon icon-menu"></i>￥<span class="font20">8888.<em class="font14">00</em></span>
+              <el-button size="medium">查看交易</el-button>
+            </div>
+            <div class="wallet-foot font16">
+              <span>待支付 ￥8888.00</span>
+              <span>已支付 ￥8888.00</span>
+              <el-button type="orange">立即支付</el-button>
+            </div>
+          </div> -->
+        </div>
+        <div class="title border-bottom-solid margin-vertical">交易明细</div>
+        <div class="wallet-screen" label="交易类型：">
+          <Radio type="radius" v-model="tradeActive" :defaults='true' defaultTxt="全部">
+            <div v-for="item in tradeData" :key="item.a" :value="item.b">{{item.a}}</div>
+          </Radio>
+        </div>
+        <div class="wallet-screen" label="时间：">
+          <Radio type="radius" v-model="timeActive" :defaults='true' defaultTxt="全部">
+            <div v-for="item in timeData" :key="item.a" :value="item.b">{{item.a}}</div>
+          </Radio>
+          <div class="time-screen">
+            自定义日期　<el-date-picker v-model="calendar" type="daterange" align="right" unlink-panels range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" @change="timeActive='default';isWatch=!1;getData({});">
+            </el-date-picker>
+          </div>
+        </div>
+        <table cellpadding="0" cellspacing="0" class="table theme-gray font14 margin-top lineheight-three">
+          <colgroup>
+            <col width="165" />
+            <col width="235" />
+            <col width="145" />
+            <col width="140" />
+            <col width="150" />
+            <col width="163" />
+          </colgroup>
+          <tr>
+            <th>日期</th>
+            <th>流水号</th>
+            <th>用途</th>
+            <th>金额（元）</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+          <tr v-for="item in datas" :key="item.fid">
+            <td>{{comm.DateToString(comm.toDate(item.fdate),'yyyy-MM-dd')}}</td>
+            <td>{{item.ftranid}}</td>
+            <td>{{item.fpurposename}}</td>
+            <td class="color-blue">{{item.fdirection==='direction_01'?'+':'-'}}{{item.famount}}</td>
+            <td>{{item.fbizstatusname}}</td>
+            <td><a href="javascript:" class="color-orange" @click="opClick('detail',item.fid)">详情</a></td>
+          </tr>
+        </table>
+        <template>
+          <div class="text-center">
+            <el-pagination @size-change="getData({type:'size',value:$event})" @current-change="getData({type:'index',value:$event})" :current-page="listDesc.pageIndex" :page-sizes="[10, 30, 50]" :page-size="listDesc.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="listDesc.records"></el-pagination>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Menu from '../../../components/menu';
+import Radio from '../../../components/radio';
+export default {
+	data() {
+		return {
+			crumb: [{a: '我的钱包'}],
+			tradeActive: 'default',
+			tradeData: [{a: '订单支付', b: 'bizpurpose_02'}, {a: '补价支付', b: 'bizpurpose_09'}, {a: '充值', b: 'bizpurpose_01'}, {a: '退款', b: 'bizpurpose_06'}, {a: '赔付收入', b: 'bizpurpose_10'}],
+			timeActive: 'default',
+			timeData: [{a: '本周', b: '5'}, {a: '本月', b: '1'}, {a: '本季度', b: '6'}, {a: '本年', b: '3'}],
+			calendar: '',
+			balance: '￥<span class="font20">{0}.<em class="font14">{1}</em></span>',
+			balancePrice: 0,
+			datas: [],
+			listDesc: {pageIndex: 1, pageSize: 10, records: 0},
+			isWatch: true,
+			dialogVisible: false,
+			detailData: {}
+		};
+	},
+	created() {
+		let t = this;
+		t.axios.post('/dynamic/pay_settleorder?operationno=querybalance', {loadingOption: {target: '.element-loading'}, simpleData: {customerId: t.$store.state.userCtx.linkIdentity.id}}).then(res => {
+			t.balancePrice = res.data.operationResult.srvData.balance;
+			t.balance = t.comm.StringFormat(t.balance,  String(t.balancePrice).indexOf('.')>-1?String(t.balancePrice).split('.'):[t.balancePrice,'00']);
+		});
+		t.getData({});
+	},
+	methods: {
+		opClick(type, data) {
+			let t = this;
+			switch (type) {
+				case 'pay':
+					t.$router.push({
+						path: '/settle/recharge',
+						query: {
+							price: t.balancePrice
+						}
+					});
+					break;
+				case 'detail':
+					t.axios.post('/dynamic/coo_incomedisburse?operationno=LoadData', {selectedRows: [{PKValue: data}]}).then(res => {
+						if (res && res.data.operationResult.isSuccess && res.data.operationResult.srvData) {
+							let resData = res.data.operationResult.srvData.uidata;
+							t.dialogVisible = !0;
+							t.detailData = resData;
+						}
+					});
+					break;
+			}
+		},
+		getData(data) {
+			let t = this;
+			let sD = {pageIndex: 1, pageSize: 10, purpose: '', dataType: '', dtStart: '', dtEnd: '', customerId: t.$store.state.userCtx.linkIdentity.id};
+			if (data.type === 'index') {
+				sD.pageIndex = data.value;
+			}
+			if (data.type === 'szie') {
+				sD.pageSize = data.value;
+			}
+			if (t.tradeActive !== 'default') {
+				sD.purpose = t.tradeActive;
+			}
+			if (t.timeActive !== 'default') {
+				sD.dataType = t.timeActive;
+			} else {
+				if (t.calendar.length == 2) {
+					sD.dtStart = t.comm.DateToString(t.calendar[0], 'yyyy-MM-dd') + ' 00:00:00';
+					sD.dtEnd = t.comm.DateToString(t.calendar[1], 'yyyy-MM-dd') + ' 23:59:59.999';
+				}
+			}
+			t.axios.post('/bill/ydj_merchantorder?operationno=getconsumptions', {simpleData: sD}).then(res => {
+				t.datas = res.data.operationResult.srvData.rptGridDataSource;
+				let listDesc = res.data.operationResult.srvData.listDesc;
+				listDesc.records = listDesc.rows;
+				t.listDesc = listDesc;
+				t.isWatch = !0;
+			});
+		}
+	},
+	components: {BreadCrumb, Menu, Radio},
+	watch: {
+		tradeActive(v) {
+			this.getData({});
+		},
+		timeActive(v) {
+			if (this.isWatch) {
+				this.calendar = '';
+				this.getData({});
+			}
+		}
+	}
+};
+</script>
+<style lang="scss">
+.wallet-right {
+	.el-dialog {
+		.table th,
+		.table td {
+			text-align: left;
+			text-indent: 1em;
+		}
+	}
+}
+.wallet {
+	& > div {
+		border: 1px solid #e8e8e8;
+		margin-right: 20px;
+		background-color: #fff;
+		display: inline-block;
+		vertical-align: top;
+		box-sizing: border-box;
+		width: 489px;
+		&:last-child {
+			margin-right: 0;
+		}
+		.wallet-total {
+			height: 190px;
+			font-size: 14px;
+			line-height: 190px;
+			text-align: center;
+			i {
+				margin-right: 10px;
+				vertical-align: middle;
+				display: inline-block;
+			}
+			.el-button {
+				margin-left: 30px;
+			}
+		}
+		.icon-money {
+			background-position: -212px -77px;
+			width: 72px;
+			height: 72px;
+		}
+		.icon-menu {
+			background-position: -295px 0px;
+			width: 68px;
+			height: 67px;
+		}
+		.title {
+			background-color: #f5f5f5;
+			height: 42px;
+			line-height: 42px;
+			text-indent: 1em;
+		}
+		.wallet-foot {
+			border-top: 1px solid #e8e8e8;
+			height: 35px;
+			line-height: 35px;
+			text-align: center;
+			vertical-align: middle;
+			padding: 20px;
+			& > * {
+				margin: 0 8px;
+			}
+			.el-button {
+				width: 120px;
+				height: 35px;
+				line-height: 35px;
+				padding: 0;
+			}
+		}
+	}
+}
+.wallet-screen {
+	position: relative;
+	font-size: 14px;
+	padding-left: 100px;
+	height: 50px;
+	line-height: 50px;
+	&::before {
+		content: attr(label);
+		position: absolute;
+		color: #999;
+		left: 0;
+	}
+	.time-screen {
+		position: absolute;
+		right: 0;
+		top: 0;
+	}
+}
+</style>

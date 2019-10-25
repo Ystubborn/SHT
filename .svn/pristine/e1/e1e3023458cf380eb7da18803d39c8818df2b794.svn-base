@@ -1,0 +1,152 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main-content w block-center">
+      <el-dialog v-if="!comm.IsNullOrEmpty(tagData.back)" title="受理" :visible.sync="tagData.back.visible">
+        <el-form label-width="100px" label-position="left" :model="tagData.back" ref="tagData" :rules="rules">
+          <el-form-item label="受理说明" is-required prop="content">
+            <el-input type="textarea" :rows="3" placeholder="请输入内容" v-model="tagData.back.content"></el-input>
+          </el-form-item>
+          <el-form-item label="图片">
+            <Upload :limit="3" v-model="tagData.back.image"></Upload>
+          </el-form-item>
+        </el-form>
+        <div slot="footer">
+          <el-button @click="opClick('acceptExit')">取 消</el-button>
+          <el-button type="primary" @click="opClick('acceptConfirm')">确定</el-button>
+        </div>
+      </el-dialog>
+      <div class="summary margin-bottom">
+        <h4 v-html="progress.t"></h4>
+        <p>{{progress.m}}日期：{{uiData.fmodifydate}}</p>
+        <div>
+          <button v-if="progress.b!=null" @click="opClick(progress.b.b)">{{progress.b.a}}</button>
+          <label v-if="progress.mb.length>0" class="color-grey">
+            您还可以<a href="javascript:void(0)" v-for="item in progress.mb" :key="item.b" @click="opClick(item.b)">{{item.a}}</a>
+          </label>
+        </div>
+      </div>
+      <div v-if="!comm.IsNullOrEmpty(uiData.freplycontent)">
+        <div class="title border-bottom-solid margin-vertical">{{comm.IsNullOrEmpty((uiData.ffeeder||{id:''}).id)?'师傅':'商户'}}处理信息</div>
+        <ul class="list margin-vertical padding-bottom">
+          <li>回复时间：<strong>{{uiData.fmodifydate}}</strong></li>
+          <li>回复内容：{{uiData.freplycontent}}</li>
+          <li v-if="!comm.IsNullOrEmpty((uiData.freplyimage||{id:''}).id)" label="回复图片：">
+            <ImgRender type="list" :source="uiData.freplyimage.id"></ImgRender>
+          </li>
+        </ul>
+      </div>
+      <div class="title border-bottom-solid">问题单详情</div>
+      <ul class="list margin-vertical padding-bottom">
+        <li>问题类别：<strong>{{(uiData.fsprotype||{fname:''}).fname}}</strong></li>
+        <li>问题描述：{{uiData.fprodesript}}</li>
+        <li v-if="!comm.IsNullOrEmpty((uiData.fprograph||{id:''}).id)" label="问题图片：">
+          <ImgRender type="list" :source="uiData.fprograph.id"></ImgRender>
+        </li>
+      </ul>
+      <div class="title border-bottom-solid margin-bottom">订单信息</div>
+      <div class="font15">客户信息</div>
+      <ul class="list border-bottom-dashed margin-bottom padding-bottom">
+        <li>客户姓名：{{uiData.fname}}</li>
+        <li>联系电话：{{uiData.fphone}}</li>
+        <li>客户地址：{{uiData.faddress}}</li>
+      </ul>
+      <div class="font15">安装信息</div>
+      <ul class="list border-bottom-dashed margin-bottom padding-bottom" v-if="!comm.IsNullOrEmpty(tagData.orderBase)">
+        <li>安装日期：{{tagData.orderBase.fservicedate}}</li>
+        <li>安装师傅：{{tagData.orderBase.fmaster_name}}</li>
+        <li>联系电话：{{tagData.orderBase.fmaster_phone}}</li>
+      </ul>
+    </div>
+  </div>
+</template>
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Upload from '../../../components/upload';
+import ImgRender from '../../../components/imagerender';
+import {billView as base} from '../../../lib';
+import detailPlugIn from './detailPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ser_servicefeed';
+billView.plugs = [new detailPlugIn({})];
+billView.mixins = [
+	{
+		computed: {
+			progress() {
+				let t = this;
+				switch (t.comm.Odefault(t.uiData.fhandlestatus, 'id')) {
+					case 'handle_sta002':
+						if (t.comm.IsNullOrEmpty(t.uiData.ffeeder.id)) {
+							return {t: '请耐心等待师傅处理', mb: [{a: '取消反馈', b: 'exit'}]};
+						}
+						return {t: '师傅对该订单进行了反馈', b: {a: '受理', b: 'accept'}, mb: []};
+					case 'handle_sta003':
+						if (t.comm.IsNullOrEmpty(t.uiData.ffeeder.id)) {
+							return {t: '商户已取消', mb: []};
+						}
+						return {t: '师傅已取消', mb: []};
+					case 'handle_sta004':
+						if (t.comm.IsNullOrEmpty(t.uiData.ffeeder.id)) {
+							return {t: '师傅已处理', mb: []};
+						}
+						return {t: '商户已处理', mb: []};
+					default:
+						return {t: '', m: '', mb: []};
+				}
+			}
+		},
+		methods: {
+			getData(type, data) {
+				let t = this;
+				switch (type) {
+					case 'merchantorder':
+						t.axios.post('/bill/ydj_merchantorder?operationno=GetMOrderAndOrderBaceInfo', {simpleData: {fmerchantid: t.$store.state.userCtx.linkIdentity.id, fbillno: t.uiData.fmerbill}}).then(res => {
+							t.tagData.orderBase = res.data.operationResult.srvData;
+						});
+				}
+			},
+			opClick(type) {
+				let t = this;
+				switch (type) {
+					case 'exit': //取消反馈
+						t.$confirm('取消申请反馈后，本次申请将关闭，您还可以再次发起,确定继续吗？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						}).then(() => {
+							t.invokeFormOperation({formId: t.formCtx.formId, opcode: 'Feedback_cancel', param: {selectedRows: [{pkValue: t.uiData.id}]}}).then(() => {
+								window.location.reload();
+							});
+						});
+						break;
+					case 'accept': //受理
+						t.tagData.back = {image: {}, visible: !0, content: ''};
+						break;
+					case 'acceptExit': //受理
+						t.tagData.back = {image: {}, visible: !1, content: ''};
+						break;
+					case 'acceptConfirm':
+						t.$refs['tagData'].validate(valid => {
+							if (!valid) {
+								t.$message({
+									message: '请完善当前回复信息',
+									type: 'warning'
+								});
+								return false;
+							}
+							t.axios.post('/bill/ser_servicefeed?operationno=replyservicefeed', {selectedRows: [{pkValue: t.uiData.id}], simpleData: {freplyimage: t.tagData.back.image.id, freplycontent: t.tagData.back.content}}).then(res => {
+								window.location.reload();
+								t.tagData.back = {image: {}, visible: !1, content: ''};
+							});
+						});
+						break;
+				}
+			}
+		},
+		components: {BreadCrumb, ImgRender, Upload}
+	}
+];
+export default billView;
+</script>

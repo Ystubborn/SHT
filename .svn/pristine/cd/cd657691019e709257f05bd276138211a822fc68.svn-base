@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+       <httpProtocol>
+          <customHeaders>
+             <add name="X-UA-Compatible" value="IE=edge;IE=10;IE=11" />
+          </customHeaders>
+       </httpProtocol>
+        <tracing>
+            <traceFailedRequests>
+                <remove path="*" />
+                <add path="*">
+                    <traceAreas>
+                        <add provider="ASP" verbosity="Verbose" />
+                        <add provider="ASPNET" areas="Infrastructure,Module,Page,AppServices" verbosity="Verbose" />
+                        <add provider="ISAPI Extension" verbosity="Verbose" />
+                        <add provider="WWW Server" areas="Authentication,Security,Filter,StaticFile,CGI,Compression,Cache,RequestNotifications,Module,FastCGI,WebSocket" verbosity="Verbose" />
+                    </traceAreas>
+                    <failureDefinitions timeTaken="00:00:00" statusCodes="400-999" />
+                </add>
+            </traceFailedRequests>
+        </tracing>
+        <rewrite>
+            <rules>
+                <clear />
+                <rule name="exclude the path" enabled="true" patternSyntax="Wildcard" stopProcessing="true">
+                    <match url="*" />
+                    <conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{HTTP_ACCEPT}" pattern="application/json*" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" logRewrittenUrl="true" />
+                    <serverVariables>
+                    </serverVariables>
+                </rule>
+                <rule name="ajax" stopProcessing="true">
+                    <match url="^(.*)" />
+                    <conditions logicalGrouping="MatchAny" trackAllCaptures="false">
+                        <add input="{CONTENT_TYPE}" pattern="^application/json" />
+                        <add input="{REQUEST_FILENAME}" pattern="^((?!version).).json$" />
+                        <add input="{HTTP_ACCEPT}" pattern="^application/json" />
+                    </conditions>
+                    <action type="Rewrite" url="https://fwgl.zys6d.com/{R:1}" />
+                </rule>
+            </rules>
+        </rewrite>
+        <urlCompression doStaticCompression="false" doDynamicCompression="false" />
+        <staticContent>
+            <mimeMap fileExtension=".apk" mimeType="application/vnd.android" />
+        </staticContent>
+    </system.webServer>
+</configuration>

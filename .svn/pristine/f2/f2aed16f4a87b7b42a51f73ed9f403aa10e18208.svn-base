@@ -1,0 +1,269 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="main-content w block-center complain">
+      <el-dialog v-if="!comm.IsNullOrEmpty(tagData.back)" title="回复" :visible.sync="tagData.back.visible" center :close-on-click-modal="false">
+        <el-form label-width="120px" label-position="left" :model="tagData.back" ref="tagData" :rules="rules">
+          <el-form-item label="回复说明" is-required prop="content">
+            <el-input type="textarea" :rows="3" placeholder="请输入内容" v-model="tagData.back.content"></el-input>
+          </el-form-item>
+          <el-form-item label="图片">
+            <Upload :limit="3" v-model="tagData.back.image"></Upload>
+          </el-form-item>
+        </el-form>
+        <span slot="footer">
+          <el-button @click="opClick('backExit')">取 消</el-button>
+          <el-button type="primary" @click="opClick('backConfirm')">确定</el-button>
+        </span>
+      </el-dialog>
+      <div class="summary margin-bottom">
+        <h4 v-html="progress.t"></h4>
+        <p v-html="progress.m"></p>
+        <Timer v-if="progress.timer" :endTime="uiData.fcreatedate" day="-5" v-model="tagData.timer"></Timer>
+        <div>
+          <el-button v-if="progress.b!=null" type="warning" size="mini" @click="opClick(progress.b.a)">{{progress.b.b}}</el-button>
+          <label v-if="!comm.IsNullOrEmpty(progress.mb)">
+            您还可以<a href="javascript:" v-for="item in progress.mb" :key="item.a" @click="opClick(item.a)">{{item.b}}</a>
+          </label>
+        </div>
+      </div>
+      <div class="title border-bottom-solid margin-bottom">协商信息</div>
+      <dl v-for="(item,index) in  _.orderBy(uiData.fappealentry,'fappealdate','desc')" :key="item.id">
+        <dd v-if="!comm.IsNullOrEmpty(item.freplycontent)">
+          <div class="user">
+            <ImgRender type="headPort" class="userhead" :source="tagData.orderBase.fmaster_image" v-if="!comm.IsNullOrEmpty(tagData.orderBase.fmaster_image)"></ImgRender>
+            {{uiData.fmasterid.fname}}
+            <label>{{item.freplydate}}</label>
+          </div>
+          <p data-label="申诉说明：">{{item.freplycontent}}</p>
+          <div data-label="申诉凭证：" v-if="!comm.IsNullOrEmpty(item.freplyimage.id)">
+            <ImgRender type="list" :source="item.freplyimage.id"></ImgRender>
+          </div>
+        </dd>
+        <dd v-if="index!=uiData.fappealentry.length-1">
+          <div class="user">
+            <ImgRender type="headPort" class="userhead" :source="$store.state.userCtx.userHead"></ImgRender>
+            {{$store.state.userCtx.linkIdentity.name}}
+            <label>{{item.fappealdate}}</label>
+          </div>
+          <p data-label="回复说明：">{{item.fappealcontent}}</p>
+          <div data-label="回复凭证：" v-if="!comm.IsNullOrEmpty(item.fappealimg.id)">
+            <ImgRender type="list" :source="item.fappealimg.id"></ImgRender>
+          </div>
+        </dd>
+      </dl>
+      <div class="title border-bottom-solid">投诉信息</div>
+      <ul class="list margin-vertical padding-bottom">
+        <li>投诉单号：{{uiData.fbillno}}</li>
+        <li>投诉内容：{{(uiData.fcomplaintitem||{fname:''}).fname}}</li>
+        <li>用户投诉赔付金：¥{{uiData.fitemmoney}}</li>
+        <li>投诉说明：{{uiData.fcomplain}}</li>
+        <li v-if="!comm.IsNullOrEmpty((uiData.fimage||{id:''}).id)" label="投诉凭证：">
+          <ImgRender type="list" :source="uiData.fimage.id"></ImgRender>
+        </li>
+      </ul>
+      <div class="title border-bottom-solid">订单信息</div>
+      <ul class="list margin-vertical padding-bottom" v-if="!comm.IsNullOrEmpty(tagData.orderBase)">
+        <li>订单号：{{tagData.orderBase.mobillno}}</li>
+        <li>订单金额：¥{{tagData.orderBase.fexpectamount}}</li>
+        <li>服务类型：{{tagData.orderBase.fservicetype}}</li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import Upload from '../../../components/upload';
+import Timer from '../../../components/timer';
+import ImgRender from '../../../components/imagerender';
+import {billView as base} from '../../../lib';
+import detailPlugIn from './detailPlugIn';
+const billView = {
+	extends: base
+};
+billView.formId = 'ser_complaintrecord';
+billView.plugs = [new detailPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			getData(type, data) {
+				let t = this;
+				switch (type) {
+					case 'orderbase':
+						t.axios.post('/bill/ydj_merchantorder?operationno=GetMOrderAndOrderBaceInfo', {simpleData: {fmerchantid: t.$store.state.userCtx.linkIdentity.id, id: data}}).then(res => {
+							t.tagData.orderBase = res.data.operationResult.srvData;
+						});
+						break;
+				}
+			},
+			opClick(type) {
+				let t = this;
+				switch (type) {
+					case 'back':
+						t.tagData.back = {image: {}, visible: !0, content: ''};
+						break;
+					case 'backExit':
+						t.tagData.back = {image: {}, visible: !1, content: ''};
+						break;
+					case 'backConfirm':
+						t.$refs['tagData'].validate(valid => {
+							if (!valid) {
+								t.$message({
+									message: '请完善当前回复信息',
+									type: 'warning'
+								});
+								return false;
+							}
+							t.axios.post('/bill/ser_complaintrecord?operationno=replyAppeal', {selectedRows: [{pkValue: t.uiData.id}], simpleData: {freplyimage: t.tagData.back.image.id, freplycontent: t.tagData.back.content}}).then(res => {
+								t.tagData.back = {image: {}, visible: !1, content: ''};
+								window.location.reload();
+							});
+						});
+						break;
+					case 'quest':
+						t.axios.post('/bill/ser_complaintrecord?operationno=withdraw', {selectedRows: [{pkValue: t.uiData.id}]}).then(res => {
+							window.location.reload();
+						});
+						break;
+					case 'csinsert':
+						t.axios.post('/bill/ser_complaintrecord?operationno=platintervent', {selectedRows: [{pkValue: t.uiData.id}], simpleData: {fsourcetype: 1}}).then(res => {
+							t.$alert('您的投诉平台已受理，平台将于5日内处理完成，请您耐心等待', '提示', {
+								confirmButtonText: '确定',
+								callback: () => {
+									window.location.reload();
+								}
+							});
+						});
+						break;
+					case 'lookmoney':
+						t.$router.push({path: '/settle'});
+						break;
+				}
+			}
+		},
+		computed: {
+			progress() {
+				let t = this;
+				switch (t.comm.Odefault(t.uiData.fcomplainstatus, 'id')) {
+					case 'complain_status01': //投诉中
+						switch (t.uiData.ftodoside.id) {
+							case 'todoside_01': //师傅处理
+								return {
+									t: '您已对师傅的申诉内容进行回复，请耐心等待处理',
+									m: '如果师傅在' + t.tagData.timer + '没有处理，将由平台直接判定赔付您金额<br/>提交日期:' + t.uiData.fcreatedate,
+									mb: [{a: 'quest', b: '取消投诉'}, {a: 'csinsert', b: '客服介入'}],
+									timer: true
+								};
+							case 'todoside_02': //商户处理
+								return {
+									t: '师傅对您的投诉内容进行申诉',
+									m: '提交日期:' + t.uiData.fcreatedate,
+									b: {a: 'back', b: '回复'},
+									mb: [{a: 'quest', b: '取消投诉'}, {a: 'csinsert', b: '客服介入'}]
+								};
+							case 'todoside_03': //平台处理
+								return {
+									t: '师傅已申请平台介入，平台将在5天内做出仲裁，请耐心等待！',
+									m: '提交日期:' + t.uiData.fcreatedate,
+									mb: [{a: 'quest', b: '取消投诉'}]
+								};
+							default:
+								return {
+									t: '投诉内容已提交，请等待师傅受理',
+									m: '如果师傅接受您的投诉将直接赔付您' + t.uiData.fitemmoney + '元，如果师傅拒绝您可以继续协商或者申请平台介入<br/>如果师傅在' + t.tagData.timer + '没有处理，将由平台直接判定赔付您金额<br/>提交日期:' + t.uiData.fcreatedate,
+									mb: [{a: 'quest', b: '取消投诉'}, {a: 'csinsert', b: '客服介入'}],
+									timer: true
+								};
+						}
+					case 'complain_status02': //已生效
+						switch (t.uiData.ftodoside.id) {
+							case ' ':
+							case '':
+							case 'todoside_01': //师傅处理
+								return {
+									t: '师傅同意您的投诉申请',
+									m: '提交日期:' + t.uiData.fcreatedate,
+									b: {a: 'lookmoney', b: '查看钱款'}
+								};
+							case 'todoside_03': //平台处理
+								return {
+									t: '平台已受理，判定责任属于师傅，赔付您' + t.uiData.fitemmoney + '元',
+									m: '提交日期:' + t.uiData.fcreatedate,
+									b: {a: 'lookmoney', b: '查看钱款'}
+								};
+						}
+						break;
+					case 'complain_status03': //投诉失败
+						return {
+							t: '平台判定您的对师傅的投诉无效',
+							m: '提交日期:' + t.uiData.fcreatedate
+						};
+					case 'complain_status04': //已撤诉
+						return {
+							t: '您已经取消了该投诉',
+							m: '提交日期:' + t.uiData.fcreatedate
+						};
+					default:
+						return {t: '', m: ''};
+				}
+			}
+		},
+		components: {BreadCrumb, Upload, Timer, ImgRender}
+	}
+];
+export default billView;
+</script>
+<style lang="scss">
+.complain {
+	dl {
+		dd {
+			font-size: 14px;
+			border-bottom: 1px dotted #cacccd;
+			margin-bottom: 20px;
+			&:last-child {
+				border-bottom: 0;
+			}
+			.user {
+				padding-left: 50px;
+				min-height: 42px;
+				position: relative;
+				line-height: 20px;
+				.userhead {
+					width: 42px;
+					height: 42px;
+					border-radius: 21px;
+					border: 1px solid #e8e8e8;
+					position: absolute;
+					left: 0;
+					top: 0;
+					overflow: hidden;
+					img {
+						width: 42px;
+					}
+				}
+				label {
+					color: #999;
+					font-size: 12px;
+					display: block;
+				}
+			}
+			& > * {
+				margin-bottom: 10px;
+			}
+			& > *[data-label] {
+				padding-left: 80px;
+				line-height: 20px;
+				position: relative;
+				&::before {
+					content: attr(data-label);
+					position: absolute;
+					left: 0;
+					top: 0px;
+					line-height: 20px;
+				}
+			}
+		}
+	}
+}
+</style>

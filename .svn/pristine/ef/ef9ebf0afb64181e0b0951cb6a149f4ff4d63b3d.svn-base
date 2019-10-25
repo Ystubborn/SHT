@@ -1,0 +1,53 @@
+<template>
+  <div class="city_box">
+    <el-cascader expand-trigger="hover" :options="options" change-on-select v-model="vmodel" @change="handleChange" :disabled="enable" placeholder="请选择省市区" :size="size">
+    </el-cascader>
+  </div>
+</template>
+
+<script>
+import {vueCityDatas} from './../services/city-picker.data';
+export default {
+	data() {
+		return {
+			vmodel: [],
+			options: []
+		};
+	},
+	props: {
+		value: {},
+		disabled: {},
+		size:{}
+	},
+	methods: {
+		handleChange(val) {
+			//if (val.length == 3) {
+				this.$emit('input', val);
+			//}
+		}
+	},
+	computed: {
+		enable() {
+			return typeof (this.disabled == 'boolean') ? this.disabled : false;
+		}
+	},
+	mounted() {
+		if (typeof this.value === 'object') {
+			for (let i in this.value) {
+				this.vmodel.push(this.value[i]);
+			}
+		}
+		this.options = vueCityDatas;
+	},
+	watch: {
+		value(v) {
+			this.vmodel = v;
+		}
+	}
+};
+</script>
+<style scoped>
+.city_box span {
+	width: 100%;
+}
+</style>

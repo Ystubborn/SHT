@@ -1,0 +1,846 @@
+<template>
+  <div class="register block-center">
+    <div>
+      <el-dialog title="《商户注册服务协议》" :visible.sync="visible">
+        <div style="height: 480px; overflow-y: auto;">
+          <p class="blod text-center">《左右手平台商户服务协议》</p>
+          <p class="margin-vertical">提示条款</p>
+          <p class="text-two-indent">欢迎您与各左右手平台商家共同签署本《左右手平台商户服务协议》（下称“本协议”）并使用左右手平台服务！</p>
+          <p class="text-two-indent">本协议为《左右手平台服务协议》，各服务条款前所列索引关键词仅为帮助您理解该条款表达的主旨之用，不影响或限制本协议条款的含义或解释。为维护您自身权益，建议您仔细阅读各条款具体表述。
+          </p>
+          <p>【审慎阅读】您在申请注册流程中点击同意本协议之前，应当认真阅读本协议。请您务必审慎阅读、充分理解各条款内容，特别是免除或者限制责任的条款、法律适用和争议解决条款。
+            <span class="blod" style="text-decoration:underline;">免除或者限制责任的条款将以粗体下划线标识，您应重点阅读</span>。如您对协议有任何疑问，可向左右手平台客服咨询。
+          </p>
+          <p>
+            【签约动作】当您按照注册页面提示填写信息、阅读并同意本协议且完成全部注册程序后，即表示您已充分阅读、理解并接受本协议的全部内容，并与左右手平台达成一致，成为左右手平台“用户”。阅读本协议的过程中，如果您不同意本协议或其中任何条款约定，您应立即停止注册程序。
+          </p>
+          <p>
+            【法律关系界定】您完成注册后，可以在左右手平台上自由选择师傅。
+            <span class="blod" style="text-decoration:underline;">
+              师傅也是平台的注册用户，并非平台或深圳市左右手家居安装网络服务有限公司雇佣，与平台或深圳市左右手家居安装网络服务有限公司没有劳动关系。简言之，左右手平台仅提供安装需求信息与安装服务信息的对接，您选择师傅后，您直接与师傅之间形成承揽关系，承揽合同的具体履行和安装服务的具体提供均与左右手平台无关。师傅的安装给您造成损失的，按照法律的规定和合同约定应当由师傅承担。
+            </span>
+          </p>
+          <p class="margin-vertical">
+            一、定义
+          </p>
+          <p>
+            左右手平台：指左右手网（域名为 http://sht.zys6d.com）的网站及客户端。
+          </p>
+          <p>
+            左右手平台服务：左右手平台基于互联网，以包含左右手平台网站、客户端等在内的各种形态（包括未来技术发展出现的新的服务形态）向您提供的各项服务。
+          </p>
+          <p>
+            左右手平台规则：包括在所有左右手平台规则频道内已经发布及后续发布的全部规则、解读、公告等内容以及各平台在帮派、论坛、帮助中心内发布的各类规则、实施细则、产品流程说明、公告等。
+          </p>
+          <p>
+            服务商：服务商是指通过左右手平台提供家居服务的企业、个体工商户或其他组织以及在左右手平台上注册并经过认证的，为用户提供线下家居配送、安装等劳动服务的个人。
+          </p>
+          <p class="margin-vertical">
+            二、协议范围
+          </p>
+          <p>
+            2.1 签约主体
+          </p>
+          <p>
+            【平等主体】本协议由您与左右手平台经营者共同缔结，本协议对您与左右手平台经营者均具有合同效力。
+          </p>
+          <p>
+            【主体信息】左右手平台经营者是指经营左右手平台的各法律主体，您可随时查看左右手平台各网站首页底部公示的证照信息以确定与您履约的左右手平台主体。本协议项下，左右手平台经营者可能根据左右手平台的业务调整而发生变更，变更后的左右手平台经营者与您共同履行本协议并向您提供服务，左右手平台经营者的变更不会影响您本协议项下的权益。左右手平台经营者还有可能因为提供新的左右手平台服务而新增，
+            <span class="blod" style="text-decoration:underline;">
+              如您使用新增的左右手平台服务的，视为您同意新增的左右手平台经营者与您共同履行本协议。
+            </span>发生争议时，您可根据您具体使用的服务及对您权益产生影响的具体行为对象确定与您履约的主体及争议相对方。
+          </p>
+          <p>
+            2.2补充协议
+          </p>
+          <p class="text-two-indent">
+            由于互联网高速发展，您与左右手平台签署的本协议列明的条款并不能完整罗列并覆盖您与左右手平台所有权利与义务，现有的约定也不能保证完全符合未来发展的需求。因此，左右手平台法律声明及隐私权政策为本协议的补充协议，与本协议不可分割且具有同等法律效力。
+            <span class="blod" style="text-decoration:underline;">如您使用左右手平台服务，视为您同意上述补充协议。</span>
+          </p>
+          <p class="margin-vertical">
+            三、账户注册与使用
+          </p>
+          <p>
+            3.1 用户资格
+          </p>
+          <p class="text-two-indent">
+            您确认，在您开始注册程序使用左右手平台服务前，您应当具备中华人民共和国法律规定的与您行为相适应的民事行为能力，即需年满18周岁，能独立承担民事责任。若您不具备前述与您行为相适应的民事行为能力，则您及您的监护人应依照法律规定承担因此而导致的一切后果。
+          </p>
+          <p>
+            3.2 账户说明
+          </p>
+          <p>
+            【账户获得】当您按照注册页面提示填写信息、阅读并同意本协议且完成全部注册程序后，您可获得左右手平台账户并成为左右手平台用户。
+          </p>
+          <p class="text-two-indent">
+            左右手平台只允许每位用户使用一个左右手平台账户。如有证据证明或左右手平台有理由相信您存在不当注册或不当使用多个左右手平台账户的情形，左右手平台可采取冻结或关闭账户、取消订单、拒绝提供服务等措施，如给左右手平台及相关方造成损失的，您还应承担赔偿责任。
+            <span class="blod" style="text-decoration:underline;">左右手平台不承担因您账户被冻结、关闭等情形的法律责任。</span>
+          </p>
+          <p>
+            【账户使用】您有权使用您设置或确认的左右手平台用户名、邮箱、手机号码（以下简称“账户名称”）及您设置的密码（账户名称及密码合称“账户”）登录左右手平台。
+          </p>
+          <p class="text-two-indent">
+            由于您的左右手平台账户关联您的个人信息及左右手平台商业信息，您的左右手平台账户仅限您本人使用。未经左右手平台同意，您直接或间接授权第三方使用您左右手平台账户或获取您账户项下信息的行为无效。如左右手平台判断您左右手平台账户的使用可能危及您的账户安全及或左右手平台信息安全的，左右手平台可拒绝提供相应服务或终止本协议。
+          </p>
+          <p>
+            【账户转让】由于用户账户关联用户信用信息，仅当有法律明文规定、司法裁定或经左右手平台同意，并符合左右手平台规则规定的用户账户转让流程的情况下，您可进行账户的转让。您的账户一经转让，该账户项下权利义务一并转移。除此外，您的账户不得以任何方式转让，否则左右手平台有权追究您的违约责任，且由此产生的一切责任均由您承担。
+          </p>
+          <p>
+            3.3注册信息管理
+          </p>
+          <p>
+            3.3.1真实合法
+          </p>
+          <p>
+            【信息真实】在使用左右手平台服务时，您应当按左右手平台页面的提示准确完整地提供您的信息（包括您的姓名及电子邮件地址、联系电话、联系地址等），以便左右手平台或其他用户与您联系。您了解并同意，您有义务保持您提供信息的真实性及有效性。
+          </p>
+          <p>
+            【用户名的合法性】您设置的左右手平台用户名不得违反国家法律法规及左右手平台规则关于用户名的管理规定，否则左右手平台可回收您的左右手平台用户名。左右手平台用户名的回收不影响您以邮箱、手机号码登录左右手平台并使用左右手平台服务。
+          </p>
+          <p>
+            3.3.2 更新维护
+          </p>
+          <p class="text-two-indent">
+            您应当及时更新您提供的信息，在法律有明确规定要求左右手平台作为平台服务提供者必须对部分用户的信息进行核实的情况下，左右手平台将依法不时地对您的信息进行检查核实，您应当配合提供最新、真实、完整、有效的信息。
+          </p>
+          <p class="text-two-indent">
+            如左右手平台按您最后一次提供的信息与您联系未果、您未按左右手平台的要求及时提供信息、您提供的信息存在明显不实或行政司法机关核实您提供的信息无效的，您将承担因此对您自身、他人及左右手平台造成的全部损失与不利后果。
+            <span class="blod" style="text-decoration:underline;">
+              左右手平台可向您发出询问或要求整改的通知，并有权直接做出删除相应资料的处理，直至中止、终止对您提供部分或全部左右手平台服务，左右手平台对此不承担责任。
+            </span>
+          </p>
+          <p>
+            3.4 账户安全规范
+          </p>
+          <p>
+            【账户安全保管义务】您的账户为您自行设置并由您保管，左右手平台任何时候均不会主动要求您提供您的账户密码。因此，建议您务必保管好您的账户，并确保您在每个上网时段结束时退出登录并以正确步骤离开左右手平台。
+          </p>
+          <p class="text-two-indent">
+            账户因您主动泄露或因您遭受他人攻击、诈骗等行为导致的损失及后果，左右手平台并不承担责任，您应通过司法、行政等救济途径向侵权行为人追偿。
+          </p>
+          <p class="text-two-indent">
+            所有通过您的用户名、密码操作的一切行为，平台均视为您本人操作，并由您本人承担法律责任。
+          </p>
+          <p>
+            【账户行为责任自负】除左右手平台存在过错外，您应对您账户项下的所有行为结果（包括但不限于在线签署各类协议、发布信息、兑换商品及服务及披露信息等）负责。
+          </p>
+          <p>
+            【日常维护须知】如发现任何未经授权使用您账户登录左右手平台或其他可能导致您账户遭窃、遗失的情况，建议您立即通知左右手平台。您理解左右手平台对您的任何请求采取行动均需要合理时间，且左右手平台应您请求而采取的行动可能无法避免或阻止侵害后果的形成或扩大，除左右手平台存在法定过错外，左右手平台不承担责任。
+          </p>
+          <p class="margin-vertical">
+            四、左右手平台服务及规范
+          </p>
+          <p>
+            【服务概况】您有权在左右手平台上享受寻找师傅、资金交易等服务。左右手平台提供的服务内容众多，具体您可登录左右手平台浏览。
+          </p>
+          <p class="text-two-indent">
+            左右手平台保留在任何时候自行决定对左右手平台服务及其相关功能、应用软件变更、升级的权利。
+            左右手平台进一步保留在平台服务中开发新的模块、功能和软件或其它语种服务的权利。
+            上述所有新的模块、功能、软件服务的提供，除非左右手平台另有说明，否则仍适用本协议。
+            服务随时可能因左右手平台的单方判断而被增加或修改，或因定期、不定期的维护而暂缓提供，
+            您将会得到相应的变更通知。您在此同意左右手平台在任何情况下都无需向其或第三方在使用服务时对其在传输或联络中的迟延、不准确、错误或疏漏及因此而致使的损害负责。
+          </p>
+          <p>
+            4.1 选择师傅
+          </p>
+          <p>
+            【招标信息发布】通过左右手平台提供的服务，您有权通过文字、图片等形式在左右手平台上发布家居服务需求、招标和选择师傅、达成交易。左右手平台不对您所发布信息的删除或储存失败负责。
+          </p>
+          <p>
+            【服务方】您有权依据自己的独立判断选择提供服务的对象师傅，左右手平台仅通过提供在线信息平台的方式，
+            向您提供信息服务，本协议的签署并不意味着左右手平台成为您在左右手平台上与服务商所进行的服务或交易的参与者；左右手平台本身不对服务商的上传内容
+            （包括其发布的供服务商参考报价的订单内容及其他全部由其上传的内容）负责，亦不对服务商在左右手平台上发布的信息及其提供的线下服务作任何明示或默示的担保。
+          </p>
+          <p class="text-two-indent">
+            左右手平台不担保左右手平台中服务商提供的家居服务一定能满足您及线下客户的要求，您明确同意其使用本网站服务及通过本网站的服务所存在的风险将完全由其自己承担；因您使用本网站服务而产生的一切后果也由您自己承担，左右手平台不对消费者承担任何责任。
+          </p>
+          <p class="text-two-indent blod" style="text-decoration:underline;">
+            您所有的非通过左右手平台订单的对应产生的交易均属于线下交易，因线下交易发生的任何纠纷，与左右手平台无关，左右手平台既不介入处理，也不承担任何责任。
+          </p>
+          <p>
+            【交易秩序保障】您应当遵守诚实信用原则，确保您所发布的家居服务需求真实并在交易过程中切实履行您的交易承诺。
+          </p>
+          <p class="text-two-indent">
+            您应当维护左右手平台市场良性竞争秩序，不得贬低、诋毁竞争对手以及服务商，不得干扰左右手平台上进行的任何交易、活动，不得以任何不正当方式提升或试图提升自身的信用度，不得以任何方式干扰或试图干扰左右手平台的正常运作。
+          </p>
+          <p>
+            4.2资金交易
+          </p>
+          <p>
+            【钱包账户】您需了解并同意，如您系在左右手平台完成注册，只要您注册成功，您即自动开通左右手钱包账户，同意使用左右手钱包账户结算与左右手平台发生联系的款项，您可以对钱包账户进行充值，使用钱包余额支付服务费等款项，订单的退款以及赔付的赔付金会依据左右手平台规则进入钱包账户。特别需要注意的是，左右手平台为加强退款和赔付效率，将涉及资金转账的操作业务委托给具备专业资质和经验的第三方进行集中处理，根据交易规则，在办理具体转账操作时，必须要您提供身份证信息以进行安全核对，您对此知悉并同意。（注：国内类似网络资金的转账，均有此要求，受此约束）
+          </p>
+          <p class="text-two-indent">
+            您有权根据需要更改账户钱包密码。因您的过错导致的任何钱包资金损失由您自行承担，该过错包括但不限于：不按照交易提示操作，未及时进行交易操作，遗忘或泄漏密码，密码被他人破解，用户使用的计算机被他人侵入。
+          </p>
+          <p>
+            【不担保交易】左右手平台不担保服务商提供的服务一定能满足您以及您客户的需求，只对您在支付服务款之后的资金进行担保交易。您有权依据左右手平台规定在服务商提交服务完成后再进行确认付款，服务商的服务完成后若您未主动确认付款，订单将在7天之后自动确认付款。
+          </p>
+          <p>
+            4.3交易争议处理
+          </p>
+          <p>
+            【交易争议处理途径】您在左右手平台交易过程中与服务商发生争议的，您有权选择以下途径解决：
+          </p>
+          <p>
+            （一）与争议相对方自主协商；
+          </p>
+          <p>
+            （二）使用左右手平台提供的争议调处服务；
+          </p>
+          <p>
+            （三）请求消费者协会或者其他依法成立的调解组织调解；
+          </p>
+          <p>
+            （四）向有关行政部门投诉；
+          </p>
+          <p>
+            （五）根据与争议相对方达成的诉讼/仲裁协议（如有）提请司法机关或仲裁机构仲裁；
+          </p>
+          <p>
+            【平台调处服务】如您依据左右手平台规则（包括但不限于交易退款、费用增加等）使用左右手平台的争议调处服务，则表示您认可并愿意履行左右手平台的维权专员或（“调处方”）作为独立的第三方根据其所了解到的争议事实并依据左右手平台规则所作出的调处决定（包括调整相关订单的交易状态、判定将争议款项的全部或部分支付给交易一方或双方，部分符合赔付规则的交易订单，左右手平台可依据单方面的判断提供相应赔偿服务等）。在左右手平台调处决定作出前，您可选择上述（三）、（四）、（五）途径（下称“其他争议处理途径”）解决争议以中止左右手平台的争议调处服务。您同意，平台维权专员可以根据您描述的师傅违规的具体情况对您提交的投诉类别做更改处理（你的投诉描述文字不会更改），以使得您的问题更够被更快更好地处理。
+          </p>
+          <p class="text-two-indent">
+            如您对调处决定不满意，您仍有权采取其他争议处理途径解决争议，但通过其他争议处理途径未取得终局决定前，您仍应先履行调处决定。
+          </p>
+          <p>
+            4.4费用
+          </p>
+          <p>
+            左右手平台向您提供的服务付出了大量的成本，除左右手平台明示的收费业务外，左右手平台向您提供的服务目前是免费的。如未来左右手平台向您收取合理费用，左右手平台会采取合理途径并以足够合理的期限提前通过法定程序并以本协议第八条约定的方式通知您，确保您有充分选择的权利。
+          </p>
+          <p>
+            4.5责任限制
+          </p>
+          <p>
+            【不可抗力及第三方原因】左右手平台依照法律规定履行基础保障义务，但对于下述原因导致的合同履行障碍、履行瑕疵、履行延后或履行内容变更等情形，左右手平台并不承担相应的违约责任：
+          </p>
+          <p>
+            （一）因自然灾害、罢工、暴乱、战争、政府行为、司法行政命令等不可抗力因素；
+          </p>
+          <p>
+            （二）因电力供应故障、通讯网络故障等公共服务因素或第三人因素；
+          </p>
+          <p>
+            （三）在左右手平台已尽善意管理的情况下，因常规或紧急的设备与系统维护、设备与系统故障、网络信息与数据安全等因素。
+          </p>
+          <p>
+            【海量信息】左右手平台仅向您提供左右手平台服务，您了解左右手平台上的信息系服务商自行发布，且可能存在风险和瑕疵。左右手平台不对服务所涉及的技术的质量、稳定、完整及对服务商信息的有效性、准确性、合法性、真实性、及时性做出任何承诺和保证，并且不承担任何由此引起的法律责任。在任何情况下，用户应充分了解交易风险后，依据自身风险承受能力和经验，衡量平台披露的交易内容及交易对方信息的准确性、真实性以及合法性，
+            <span class="blod" style="text-decoration:underline;">左右手平台对用户因其选择左右手平台的服务而导致的任何直接、间接损失（包括但不限于交易损失、资金损失、利润损失、营业中断损失等）均不承担法律责任，均由用户自行承担。</span>
+          </p>
+          <p>
+            【调处决定】您理解并同意，在争议调处服务中，左右手平台的维权专员、大众评审员并非专业人士，仅能以普通人的认知对用户提交的凭证进行判断。因此，除存在故意或重大过失外，调处方对争议调处决定免责。
+          </p>
+          <p>
+            4.6安全注意
+          </p>
+          <p class="text-two-indent">
+            左右手平台已经尽最大努力加强师傅的安全性审查和筛选。但我们仍重点提请用户们主动提请客户注意，以下情形下切勿选择师傅上门安装：
+          </p>
+          <p>
+            （一）师傅的信息与订单不符（请在开门前再次进行核对）；
+          </p>
+          <p>
+            （二）家中只有老人和小孩，或其他不足以防范外来者的家人在场时；
+          </p>
+          <p>
+            （三）夜晚安装或者其他不适合上门安装的时间；
+          </p>
+          <p>
+            （四）贵重物品放置在家中容易被看见的裸露地方。
+          </p>
+          <p class="margin-vertical">
+            五、用户信息的保护及授权
+          </p>
+          <p>
+            5.1个人信息的保护
+          </p>
+          <p class="text-two-indent">
+            左右手平台非常重视用户个人信息（即能够独立或与其他信息结合后识别用户身份的信息）的保护，在您使用左右手平台提供的服务时，您同意左右手平台按照在左右手平台上公布的隐私权政策收集、存储、使用、披露和保护您的个人信息。左右手平台希望通过隐私权政策向您清楚地介绍左右手平台对您个人信息的处理方式，因此左右手平台建议您完整地阅读隐私权政策，以帮助您更好地保护您的隐私权。
+          </p>
+          <p>
+            5.2非个人信息的保证与授权
+          </p>
+          <p>
+            【信息的发布】您声明并保证，您对您所发布的信息拥有相应、合法的权利。否则，左右手平台可对您发布的信息依法或依本协议进行删除或屏蔽。
+          </p>
+          <p>
+            【禁止性信息】您应当确保您所发布的信息不包含以下内容：
+          </p>
+          <p>
+            （一）违反国家法律法规禁止性规定的；
+          </p>
+          <p>
+            （二）政治宣传、封建迷信、淫秽、色情、赌博、暴力、恐怖或者教唆犯罪的；
+          </p>
+          <p>
+            （三）欺诈、虚假、不准确或存在误导性的；
+          </p>
+          <p>
+            （四）侵犯他人知识产权或涉及第三方商业秘密及其他专有权利的；
+          </p>
+          <p>
+            （五）侮辱、诽谤、恐吓、涉及他人隐私等侵害他人合法权益的；
+          </p>
+          <p>
+            （六）存在可能破坏、篡改、删除、影响左右手平台任何系统正常运行或未经授权秘密获取左右手平台及其他用户的数据、个人资料的病毒、木马、爬虫等恶意软件、程序代码的；
+          </p>
+          <p>
+            （七）其他违背社会公共利益或公共道德或依据相关左右手平台协议、规则的规定不适合在左右手平台上发布的。
+          </p>
+          <p>
+            【授权使用】对于您提供及发布除个人信息外的文字、图片等非个人信息，在版权保护期内您免费授予左右手平台获得全球排他的许可使用权利及再授权给其他第三方使用的权利。您同意左右手平台存储、使用、复制、修订、编辑、发布、展示、翻译、分发您的非个人信息或制作其派生作品，并以已知或日后开发的形式、媒体或技术将上述信息纳入其它作品内。
+          </p>
+          <p class="text-two-indent">
+            为方便您使用左右手平台其他相关服务，您授权左右手平台将您在账户注册和使用左右手平台服务过程中提供、形成的信息传递给左右手平台其他相关服务提供者，例如，左右手平台可能将该信息发送至信用卡服务商以完成付款程序。或从左右手平台其他相关服务提供者获取您在注册、使用相关服务期间提供、形成的信息。
+          </p>
+          <p class="margin-vertical">
+            六、用户的违约及处理
+          </p>
+          <p>
+            6.1违约认定
+          </p>
+          <p>
+            发生如下情形之一的，视为您违约：
+          </p>
+          <p>
+            （一）使用左右手平台服务时违反有关法律法规规定的；
+          </p>
+          <p>
+            （二）违反本协议或本协议补充协议（即本协议第2.2条）约定的。
+          </p>
+          <p>
+            为适应平台发展和满足海量用户对高效优质服务的需求，您理解并同意，左右手平台可在左右手平台规则中约定违约认定的程序和标准。如：左右手平台可依据服务商提供的证据来认定您是否构成违约；您有义务对您的指控进行充分举证和合理解释，否则将被认定为违约。
+          </p>
+          <p>
+            6.2违约处理措施
+          </p>
+          <p>
+            【信息处理】您在左右手平台上发布的信息构成违约的，左右手平台可根据相应规则立即对相应信息进行删除、屏蔽处理等。
+          </p>
+          <p>
+            【行为限制】您在左右手平台上实施的行为，或虽未在左右手平台上实施但对左右手平台及其用户产生影响的行为构成违约的，左右手平台可依据相应规则对您执行限制参加商业活动、中止向您提供部分或全部服务、冻结或删除账户等处理措施。
+          </p>
+          <p>
+            【处理结果公示】左右手平台可将对您上述违约行为处理措施信息以及其他经国家行政或司法机关生效法律文书确认的违法信息在左右手平台上予以公示。
+          </p>
+          <p>
+            6.3赔偿责任
+          </p>
+          <p class="text-two-indent">
+            如您的行为使左右手平台遭受损失（包括自身的直接经济损失、商誉损失及对外支付的赔偿金、和解款、律师费、诉讼费等间接经济损失），您应赔偿左右手平台的上述全部损失。
+          </p>
+          <p class="text-two-indent">
+            如您的行为使左右手平台遭受第三人主张权利，左右手平台可在对第三人承担金钱给付等义务后就全部损失向您追偿。
+          </p>
+          <p>
+            6.4特别约定
+          </p>
+          <p>
+            【商业贿赂】如您向左右手平台的雇员或顾问等提供实物、现金、现金等价物、劳务、旅游等价值明显超出正常商务洽谈范畴的利益，则可视为您存在商业贿赂行为。发生上述情形的，左右手平台可立即终止与您的所有合作并向您收取违约金及或赔偿金，该等金额以左右手平台因您的贿赂行为而遭受的经济损失和商誉损失作为计算依据。
+          </p>
+          <p>
+            【关联处理】如您因严重违约导致左右手平台终止本协议时，出于维护平台秩序及保护消费者权益的目的，左右手平台可对与您在其他协议项下的合作采取中止甚或终止协议的措施，并以本协议第八条约定的方式通知您。
+          </p>
+          <p class="text-two-indent">
+            如左右手平台与您签署的其他协议及左右手平台与您签署的协议中明确约定了对您在本协议项下合作进行关联处理的情形，则左右手平台出于维护平台秩序及保护消费者权益的目的，可在收到指令时中止甚至终止协议，并以本协议第八条约定的方式通知您。
+          </p>
+          <p class="margin-vertical">
+            七、协议的变更
+          </p>
+          <p class="text-two-indent">
+            左右手平台可根据国家法律法规变化及维护交易秩序、保护消费者权益需要，不时修改本协议、补充协议，变更后的协议、补充协议（下称“变更事项”）将通过法定程序并以本协议第八条约定的方式通知您。
+          </p>
+          <p class="text-two-indent">
+            如您不同意变更事项，您有权于变更事项确定的生效日前联系左右手平台反馈意见。如反馈意见得以采纳，左右手平台将酌情调整变更事项。
+          </p>
+          <p class="text-two-indent">
+            如您对已生效的变更事项仍不同意的，您应当于变更事项确定的生效之日起停止使用左右手平台服务，变更事项对您不产生效力；如您在变更事项生效后仍继续使用左右手平台服务，则视为您同意已生效的变更事项。
+          </p>
+          <p class="margin-vertical">
+            八、通知
+          </p>
+          <p>
+            8.1有效联系方式
+          </p>
+          <p class="text-two-indent">
+            您在注册成为左右手平台用户，并接受左右手平台服务时，您应该向左右手平台提供真实有效的联系方式（包括您的电子邮件地址、联系电话、联系地址等），对于联系方式发生变更的，您有义务及时更新有关信息，并保持可被联系的状态。
+          </p>
+          <p class="text-two-indent">
+            您在注册左右手平台用户时生成的用于登陆左右手平台接收站内信、系统消息也作为您的有效联系方式。
+          </p>
+          <p class="text-two-indent">
+            左右手平台将向您的上述联系方式的其中之一或其中若干向您送达各类通知，而此类通知的内容可能对您的权利义务产生重大的有利或不利影响，请您务必及时关注。
+          </p>
+          <p>
+            8.2通知的送达
+          </p>
+          <p class="text-two-indent">
+            左右手平台通过上述联系方式向您发出通知，其中以电子的方式发出的书面通知，包括但不限于在左右手平台公告，向您提供的联系电话发送手机短信，向您提供的电子邮件地址发送电子邮件，在发送成功后即视为送达；以纸质载体发出的书面通知，按照提供联系地址交邮后的第五个自然日即视为送达。
+          </p>
+          <p class="text-two-indent">
+            对于在左右手平台上因交易活动引起的任何纠纷，您同意司法机关（包括但不限于人民法院）可以通过手机短信、电子邮件等现代通讯方式或邮寄方式向您送达法律文书（包括但不限于诉讼文书）。您指定接收法律文书的手机号码、电子邮箱等联系方式为您在左右手平台注册、更新时提供的手机号码、电子邮箱联系方式，司法机关向上述联系方式发出法律文书即视为送达。您指定的邮寄地址为您的法定联系地址或您提供的有效联系地址。
+          </p>
+          <p class="text-two-indent">
+            您同意司法机关可采取以上一种或多种送达方式向您达法律文书，司法机关采取多种方式向您送达法律文书，送达时间以上述送达方式中最先送达的为准。
+          </p>
+          <p class="text-two-indent">
+            您同意上述送达方式适用于各个司法程序阶段。如进入诉讼程序的，包括但不限于一审、二审、再审、执行以及督促程序等。
+          </p>
+          <p class="text-two-indent">
+            你应当保证所提供的联系方式是准确、有效的，并进行实时更新。如果因提供的联系方式不确切，或不及时告知变更后的联系方式，使法律文书无法送达或未及时送达，由您自行承担由此可能产生的法律后果。
+          </p>
+          <p class="margin-vertical">
+            九、协议的终止
+          </p>
+          <p>
+            9.1终止的情形
+          </p>
+          <p>
+            【用户发起的终止】您有权通过以下任一方式终止本协议：
+          </p>
+          <p>
+            （一）变更事项生效前您停止使用并明示不愿接受变更事项的；
+          </p>
+          <p>
+            （二）您明示不愿继续使用左右手平台服务，且符合左右手平台终止条件的。
+          </p>
+          <p>
+            【左右手平台发起的终止】出现以下情况时，左右手平台可以本协议第八条的所列的方式通知您终止本协议：
+          </p>
+          <p>
+            （一）您违反本协议约定，左右手平台依据违约条款终止本协议的；
+          </p>
+          <p>
+            （二）您盗用他人账户、发布违禁信息、骗取他人财物、引导线下交易、扰乱市场秩序、采取不正当手段谋利等行为，左右手平台依据左右手平台规则对您的账户予以查封的；
+          </p>
+          <p>
+            （三）除上述情形外，因您多次违反左右手平台规则相关规定且情节严重，左右手平台依据左右手平台规则对您的账户予以查封的；
+          </p>
+          <p>
+            （四）您的账户被左右手平台依据本协议回收的；
+          </p>
+          <p>
+            （五）其它应当终止服务的情况。
+          </p>
+          <p>
+            9.2协议终止后的处理
+          </p>
+          <p>
+            【用户信息披露】本协议终止后，除法律有明确规定外，左右手平台无义务向您或您指定的第三方披露您账户中的任何信息。
+          </p>
+          <p>
+            【左右手平台权利】本协议终止后，左右手平台仍享有下列权利：
+          </p>
+          <p>
+            （一）继续保存您留存于左右手平台的本协议第五条所列的各类信息；
+          </p>
+          <p>
+            （二）对于您过往的违约行为，左右手平台仍可依据本协议向您追究违约责任。
+          </p>
+          <p>
+            【交易处理】本协议终止后，对于您在本协议存续期间产生的交易订单，左右手平台可通知交易相对方并根据交易相对方的意愿决定是否关闭该等交易订单；如交易相对方要求继续履行的，则您应当就该等交易订单继续履行本协议及交易订单的约定，并承担因此产生的任何损失或增加的任何费用。
+          </p>
+          <p class="margin-vertical">
+            十、法律适用、管辖与其他
+          </p>
+          <p>
+            【法律适用】本协议之订立、生效、解释、修订、补充、终止、执行与争议解决均适用中华人民共和国大陆地区法律；如法律无相关规定的，参照商业惯例及或行业惯例。
+          </p>
+          <p>
+            <span class="blod" style="text-decoration:underline;">
+              【管辖】您因使用左右手平台服务所产生及与左右手平台服务有关的争议，由左右手平台与您协商解决。协商不成时，任何一方均可向深圳市左右手家居安装网络服务有限公司所在地深圳市南山区人民法院提起诉讼。</span>
+          </p>
+          <p>
+            【可分性】本协议任一条款被视为废止、无效或不可执行，该条应视为可分的且并不影响本协议其余条款的有效性及可执行性。
+          </p>
+          <p>
+            【最终解释权】左右手平台对本服务协议包括基于本服务协议制定的各项规则拥有最终解释权
+          </p>
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="visible = !1">确 定</el-button>
+        </span>
+      </el-dialog>
+      <el-dialog :visible.sync="registerVisible" title="注册选项" :close-on-press-escape="false" :show-close="false" :close-on-click-modal="false">
+        <span>您是否有企业注册码？</span>
+        <div slot="footer" class="text-center">
+          <el-button @click="usertype=1;registerVisible=!1">是</el-button>
+          <el-button @click="usertype=0;registerVisible=!1">否</el-button>
+        </div>
+      </el-dialog>
+      <el-form :rules="rules" :model="form" label-width="100px" class="block-center" ref="form">
+        <el-form-item label="手机号" prop="phone" is-required>
+          <el-input v-model="form.phone" placeholder="请填写注册手机号" size="small"></el-input>
+        </el-form-item>
+        <el-form-item label="验证码" prop="verifCode" is-required>
+          <el-input v-model="form.verifCode" placeholder="请填写验证码" size="small" class="i5"></el-input>
+          <el-button @click="OtherClick('getVerifCode')" :disabled="codeDisabled" size="small" class="i5">{{codeMessage}}</el-button>
+        </el-form-item>
+        <!-- vip用户 -->
+        <div v-if="usertype===1">
+          <el-form-item label="注册类型" prop="merchantVal">
+            <el-select v-model="form.merchantVal" placeholder="请选择注册类型" size="small">
+              <el-option v-for="item in merchant" :key="item.a" :label="item.b" :value="item.a"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="服务性质" prop="serverNature" size="small">
+            <el-select v-model="form.serverNature" placeholder="请选择服务性质">
+              <el-option v-for="item in serverN" :key="item.a" :label="item.b" :value="item.a"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="企业代码" prop="joinEnterpriseId">
+            <el-input v-model="form.joinEnterpriseId" placeholder="请填写注册企业代码" size="small"></el-input>
+          </el-form-item>
+          <el-form-item label="商家名称" prop="merchantName">
+            <el-input v-model="form.merchantName" placeholder="请填写商家名称" size="small"></el-input>
+          </el-form-item>
+          <el-form-item label="商家联系人" prop="merchantContact">
+            <el-input v-model="form.merchantContact" placeholder="请填写商家联系人" size="small"></el-input>
+          </el-form-item>
+          <el-form-item label="所在地" prop="city.fcity" is-required>
+            <City v-model="city" size="small"></City>
+          </el-form-item>
+        </div>
+        <el-form-item label="密码" prop="password">
+          <el-input type="password" v-model="form.password" placeholder="请填写密码" size="small"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="password2">
+          <el-input type="password" v-model="form.password2" placeholder="请再次填写密码" size="small"></el-input>
+        </el-form-item>
+        <el-form-item label-width="0" class="text-center">
+          <el-checkbox label="我同意" v-model="agreementBoll"></el-checkbox>
+          <a @click="visible =!0" href="javascript:void(0)">《商户注册服务协议》</a>
+        </el-form-item>
+        <el-form-item label-width="0" class="text-center">
+          <el-button type="primary" @click="OtherClick('register')" size="small">注册</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+import City from 'components/city';
+export default {
+	data() {
+		return {
+			registerVisible: !0,
+			usertype: 0, //用户注册类型 0普通用户 1VIP用户
+			visible: !1, //协议窗口控制
+			codeDisabled: !0,
+			codeMessage: '获取验证码',
+			agreementBoll: !1,
+			merchant: [
+				//商家类型选项
+				{
+					a: 'merchant_type01',
+					b: '商家'
+				},
+				{
+					a: 'merchant_type02',
+					b: '厂家'
+				},
+				{
+					a: 'merchant_type03',
+					b: '电商'
+				},
+				{
+					a: 'merchant_type04',
+					b: '装修公司'
+				},
+				{
+					a: 'merchant_type05',
+					b: '个人'
+				}
+			],
+			serverN: [
+				{
+					a: 'merchant_servernature01',
+					b: '全屋整装'
+				},
+				{
+					a: 'merchant_servernature02',
+					b: '定制家具'
+				},
+				{
+					a: 'merchant_servernature03',
+					b: '橱柜'
+				},
+				{
+					a: 'merchant_servernature04',
+					b: '门窗'
+				},
+				{
+					a: 'merchant_servernature05',
+					b: '成品柜类'
+				}
+			],
+			city: [],
+			form: {
+				verifCode: '',
+				phone: '',
+				password: '', //密码
+				password2: '', //确认密码
+				merchantVal: '',
+				serverNature: '', //服务性质
+				joinEnterpriseId: '', //企业代码
+				merchantName: '', //商家名称
+				merchantContact: '', //商家联系人
+				city: {
+					fprovince: '',
+					fcity: '',
+					fregion: ''
+				}
+			},
+			rules: {
+				phone: [
+					{
+						validator: (a, b, c) => {
+							if (!/^((\+?86)|(\(\+86\)))?1[3-9][0-9]{9}$/.test(b)) {
+								this.codeDisabled = !0;
+								return c(new Error('请输入正确的手机号'));
+							}
+							this.codeDisabled = !1;
+							c();
+						},
+						trigger: 'blur'
+					}
+				],
+				verifCode: [
+					{
+						validator: (a, b, c) => {
+							if (!/^\d{4}$/.test(b)) {
+								c(new Error('验证码必须为四位数字'));
+							} else {
+								c();
+							}
+						},
+						trigger: 'blur'
+					}
+				],
+				merchantVal: [{required: true, message: '请选择注册类型', trigger: 'blur'}],
+				serverNature: [{required: true, message: '请选择服务性质', trigger: 'blur'}],
+				joinEnterpriseId: [{required: true, message: '请输入注册企业代码', trigger: 'blur'}],
+				merchantName: [{required: true, message: '请输入商家名称', trigger: 'blur'}],
+				merchantContact: [{required: true, message: '请输入商家联系人', trigger: 'blur'}],
+				'city.fcity': [{required: true, message: '请至少选择至市', trigger: 'change'}],
+				password: [
+					{required: true, message: '请输入密码', trigger: 'blur'},
+					{
+						validator: (a, b, c) => {
+							if (!/^\S{6,16}$/.test(b)) {
+								return c(new Error('请输入6到16位长度的密码'));
+							}
+							c();
+						},
+						trigger: 'blur'
+					}
+				],
+				password2: [
+					{required: true, message: '请再次输入密码', trigger: 'blur'},
+					{
+						validator: (a, b, c) => {
+							if (!/^\S{6,16}$/.test(b)) {
+								return c(new Error('请输入6到16位长度的密码'));
+							}
+							if (b !== this.password && !b == this.password) {
+								return c(new Error('两次输入密码不一致'));
+							}
+							c();
+						},
+						trigger: 'blur'
+					}
+				]
+			}
+		};
+	},
+	methods: {
+		OtherClick(a) {
+			let t = this;
+			switch (a) {
+				case 'getVerifCode':
+					var timer;
+					let times = 60;
+					t.axios.get('/sms/code?format=json&mobilePhone=' + t.form.phone.trim(), {}).then(res => {
+						if (res.data.operationResult.isSuccess === true) {
+							t.codeDisabled = true;
+							t.codeMessage = '60秒后重试';
+							timer = setInterval(function() {
+								--times;
+								if (times == 0) {
+									t.codeDisabled = false;
+									t.codeMessage = '获取验证码';
+									clearInterval(timer);
+								} else {
+									t.codeMessage = times + '秒后重试';
+								}
+							}, 1000);
+						} else {
+							t.$message({
+								message: '验证码发送失败',
+								type: 'error'
+							});
+						}
+					});
+					break;
+				case 'register':
+					t.$refs['form'].validate(valid => {
+						if (!valid) {
+							return false;
+            }
+            if(!t.agreementBoll)
+            {
+              	t.$message({
+								message: '您必须同意注册协议',
+								type: 'warning'
+              });
+              return false;
+            }
+						t.axios.get('/sms/code/validate.json?mobilePhone=' + t.form.phone.trim() + '&authCode=' + t.form.verifCode, {}).then(res => {
+							if (res.data.operationResult.isSuccess === true) {
+								t.active = 1;
+							} else {
+								t.$message.error('验证码错误');
+							}
+						});
+						t.axios
+							.post('/reguser', {
+								activeCode: t.form.verifCode,
+								company: '',
+								joinCode: t.form.verifCode,
+								phoneNumber: t.form.phone,
+								userName: t.form.phone,
+								userType: '32768',
+								passWord: t.form.password,
+								rePassword: t.form.password2,
+								meta: {
+									registerRole: '商户通用户',
+									merchant_type: t.usertype == 0 ? 'merchant_type05' : t.form.merchantVal,
+									joinEnterpriseId: t.usertype == 0 ? t.$route.query.companyid: t.form.joinEnterpriseId,
+									fname: t.usertype == 0 ? t.form.phone : t.form.merchantName,
+									fduty: t.usertype == 0 ? t.form.phone : t.form.merchantContact,
+									fservernature: t.form.serverNature,
+									fphone: t.form.phone,
+									fprovince: t.form.city.fprovince,
+									fcity: t.form.city.fcity,
+									fregion: t.form.city.fregion,
+                  faddress: '',
+                  // companyid:'91440300349878211L',
+                  // masterid:'442277257441054720'
+                  companyid:t.$route.query.companyid,
+                  masterid:t.$route.query.masterid
+
+								}
+							})
+							.then(res => {
+								if (res && res.status == '200') {
+                  t.$alert("您已注册成功，请登录电脑端进行下单！")
+								}
+							});
+					});
+					break;
+			}
+		}
+	},
+	watch: {
+		city(v) {
+			this.form.city.fprovince = v[0] || '';
+			this.form.city.fcity = v[1] || '';
+			this.form.city.fregion = v[2] || '';
+		}
+	},
+	created() {
+		this.usertype = this.$route.query.type || 0;
+		this.$store.commit('header', {caption: '欢迎注册左右手下单系统'});
+	},
+	dependencies: ['authService'],
+	components: {City}
+};
+</script>
+
+<style lang="scss">
+.el-dialog {
+	width: auto;
+}
+.el-message-box{width: 300px}
+.el-form-item__error {
+	top: 34px;
+}
+.el-input__inner {
+	padding: 0 0 0 5px;
+}
+body {
+	font: 12px/1.5 'Microsoft YaHei', NSimSun, SimHei, Verdana, Arial, sans-serif;
+	background: #fff;
+}
+header {
+	display: none;
+}
+footer {
+	display: none;
+}
+.register {
+	.el-form-item {
+		margin-bottom: 8px;
+	}
+	> div {
+		padding-top: 30px;
+	}
+	.title {
+		height: 10%;
+		line-height: 10%;
+		font-size: 24px;
+		border-bottom: 1px #cacccd solid;
+		> div {
+			position: absolute;
+			font-size: 14px;
+		}
+		a {
+			color: #0086e4;
+			text-decoration: none;
+			position: relative;
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+	.success {
+		margin: 50px auto;
+		i {
+			color: #5bc92e;
+			font-size: 45px;
+			margin-left: 50px;
+			display: inline-block;
+		}
+		> span {
+			font-size: 24px;
+			margin-left: 20px;
+			display: inline-block;
+			height: 45px;
+			line-height: 45px;
+			vertical-align: top;
+		}
+		button.el-button--primary {
+			margin-left: 80px;
+			margin-top: 80px;
+		}
+	}
+	.el-form {
+		width: 320px;
+		a {
+			color: #0086e4;
+		}
+		button.el-button--primary,
+		.el-select {
+			width: 180px;
+		}
+		.el-input {
+			width: 185px;
+		}
+		.i5.el-button,
+		.i5.el-input {
+			width: 90px;
+		}
+	}
+}
+</style>

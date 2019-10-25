@@ -1,0 +1,739 @@
+<template>
+  <div>
+    <BreadCrumb :data="tagData.crumb"></BreadCrumb>
+    <div class="sologo w block-center">温馨提示：本平台下单不取收任何费用，并且为您提供线上担保服务。90%安装产生的纠纷及损失均是因为线下交易问题。</div>
+    <div class="main-content w block-center placeorder" v-if="!comm.IsNullOrEmpty(uiData.fservicetype)">
+      <el-form :model="uiData" :rules="rules" ref="uiData" label-width="100px">
+        <div class="title border-bottom-solid margin-bottom">基本信息</div>
+        <div class="el-from-lable-vertical" label="报价方式：">
+          <Radio type="round" v-model="uiData.foffertype.id" :readonly="['fres_type_01','fres_type_03'].indexOf(uiData.fservicetype.id)>-1" readonly_msg="含有物流的订单只允许报价方式为师傅报价">
+            <div value="offer_type_01">
+              <div class="offer-one">一口价</div>
+            </div>
+            <div value="offer_type_02">
+              <div class="offer-two">师傅报价</div>
+            </div>
+          </Radio>
+        </div>
+        <div class="el-from-lable-vertical" label="服务类型：">
+          <Radio type="border" v-model="uiData.fservicetype.id" :readonly="uiData.fserviceentry.length>0" readonly_msg="如需更改类型，请将服务信息的项目全部移除">
+            <div v-for="item in tagData.comboStore.fservicetype" :key="item.id" :value="item.id">{{item.name}}</div>
+          </Radio>
+        </div>
+        <el-form-item label="服务类目：" prop="fprofield.id" v-if="uiData.fservicetype.id!='fres_type_03'">
+          <Radio type="border" class="serviceicon" v-model="uiData.fprofield.id" :readonly="uiData.fserviceentry.length>0" readonly_msg="如需更改类型，请将服务信息的项目全部移除">
+            <div v-for="(item,index) in tagData.comboStore.fprofield" :key="item.id" :value="item.id" v-show="index<5">
+              <div class="service-icon"><i :class="['icon','icon-profield-'+index]"></i>{{item.name}}</div>
+            </div>
+          </Radio>
+        </el-form-item>
+        <div class="title border-bottom-solid margin-bottom">客户信息<span class="color-red font14">{{tagData.serviceTypeMessage}}</span></div>
+        <el-form-item>
+          <button class="intelligence" type="button" @click="opClick('intelligence')"><i class="icon icon-int"></i>智能填写</button>
+        </el-form-item>
+        <el-form-item label="客户：" is-required>
+          <el-col :span="5">
+            <el-form-item prop="fname">
+              <el-input type="text" v-model.trim="uiData.fname" placeholder="请输入客户姓名"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="5">
+            <el-form-item prop="fphone">
+              <el-input type="text" v-model.trim="uiData.fphone" placeholder="请输入客户手机号"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-form-item>
+        <el-form-item>
+          <el-col :span="5">
+            <el-form-item prop="fregion.id">
+              <City v-model="tagData.city"></City>
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item prop="fcusaddress">
+              <el-input type="text" v-model.trim="uiData.fcusaddress" placeholder="请输入详细的地址" class="input-address margin-right"><i class="el-icon-location el-input__icon" slot="suffix"></i></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="3" v-if="['fres_type_01','fres_type_03'].indexOf(uiData.fservicetype.id)>-1">
+            <el-select v-model="uiData.fiselevator" class="i8">
+              <el-option :key="item.id" :label="item.name" :value="item.id" v-for="item in [{'id':true,'name':'有电梯'},{'id':false,'name':'无电梯'}]"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="3" v-if="['fres_type_01','fres_type_03'].indexOf(uiData.fservicetype.id)>-1&&!uiData.fiselevator">
+            <el-checkbox v-model="uiData.fisupstairs"></el-checkbox>是否抬楼
+          </el-col>
+          <el-col :span="3" v-if="['fres_type_01','fres_type_03'].indexOf(uiData.fservicetype.id)>-1&&!uiData.fiselevator&&uiData.fisupstairs">
+            <el-input type="text" class="i8" v-model.trim="uiData.felevator" placeholder="输入楼层"></el-input> 楼
+          </el-col>
+        </el-form-item>
+        <div v-if="['fres_type_01','fres_type_03'].indexOf(uiData.fservicetype.id)>-1">
+          <div class="title border-bottom-solid margin-bottom">物流信息<label class="color-gray">平台默认物流点验货时服务商仅验收商品外包装</label></div>
+          <el-form-item label="物流公司：" prop="flogistics" is-required>
+            <el-input type="text" v-model.trim="uiData.flogistics" placeholder="请输入物流公司名称" class="margin-right"></el-input>
+            物流单号：<el-input type="text" v-model.trim="uiData.flogisticsno" placeholder="请输入物流单号"></el-input>
+          </el-form-item>
+
+          <el-form-item label="提货地址：" prop="fcollectadd" is-required>
+            <el-input type="text" v-model.trim="uiData.fcollectadd" placeholder="请输入提货详细地址" class="input-address margin-right"><i class="el-icon-location el-input__icon" slot="suffix"></i></el-input>
+          </el-form-item>
+          <el-form-item label="联系方式：" is-required>
+            <el-col :span="5">
+              <el-form-item prop="fcollectrel">
+                <el-input type="text" v-model.trim="uiData.fcollectrel" placeholder="请输入提货人" class="margin-right"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="10">
+              <el-form-item prop="fcollectpho">
+                <el-input type="text" v-model.trim="uiData.fcollectpho" placeholder="请输入提货电话" class="margin-right"></el-input>
+                包装件数：<el-input-number class="i8 margin-right" :min="1" :controls="false" :max="100" v-model="uiData.fpieces"></el-input-number>件
+              </el-form-item>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="代付运费：">
+            <el-checkbox v-model="uiData.fispay" class="margin-right">需师傅代付运费，师傅报价包含此费用</el-checkbox>
+            <em class="color-red">*</em>代付金额：　<el-input-number class="i8 margin-right" :min="0" :controls="false" :max="10000" v-model="uiData.fshippingamount"></el-input-number>元
+          </el-form-item>
+        </div>
+        <div v-if="uiData.fservicetype.id!='fres_type_03'">
+          <div class="title border-bottom-solid margin-bottom">服务信息<span class="color-red font14">（重要提醒：平台主要针对定制家居安装为主，请您上传完整的安装图纸，以免图纸不全无法报价或安装时拒绝服务等情况出现。）</span></div>
+          <el-form-item label-width="0px" :prop="'fserviceentry['+index+']'" :rules="rules.fserviceentry" class="form-service-item" v-for=" (item,index) in uiData.fserviceentry" :key="item.id">
+            <div class="service-item">
+              <div>
+                <div class="img-panel" :data-count="item.fentityimage.id.split(',').length">
+                  <img :src="item.fentityimage.url.split(',')[0]" />
+                </div>
+                <input type="button" value="添加图片" @click="opClick('showImageDialog',item.id)" />
+              </div>
+              <div>
+                <div>
+                  <label is-required>服务项目</label>
+                  <el-select placeholder="请选择服务类型" filterable v-model="item.fseritemid.id">
+                    <el-option v-for="seritem in tagData.serviceTypeData" :key="seritem.id" :label="seritem.name" :value="seritem.id"></el-option>
+                  </el-select>
+                </div>
+                <div>
+                  <label is-required>材质</label>
+                  <el-select placeholder="请选择材质" v-model="item.fmaterial.id" @change="opChange('itemcategory',item)">
+                    <el-option v-for="material in comm.Odefault(tagData.serviceTypeData.find(o=>{return o.id==item.fseritemid.id;}),'material',[])" :key="material.id" :label="material.name" :value="material.id"></el-option>
+                  </el-select>
+                </div>
+                <div>
+                  <label>房型</label>
+                  <el-select placeholder="可选房型" v-model="item.froomno.id">
+                    <el-option v-for="roomno in tagData.comboStore.froomno" :key="roomno.id" :label="roomno.name" :value="roomno.id"></el-option>
+                  </el-select>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <label is-required>{{uiData.foffertype.id!='offer_type_01'?'期望':''}}单价</label>
+                  <el-input-number placeholder="0元" class="input-price" :min="0" :controls="false" :max="1000000" v-model="item.fprice"></el-input-number>
+                  <el-select v-model="item.funitid" placeholder="单位" class="input-price">
+                    <el-option v-for="unit in tagData.unitData" :key="unit.fbillhead_id" :label="unit.fname" :value="unit.fbillhead_id"></el-option>
+                  </el-select>
+                  <label is-required>数量</label>
+                  <el-input-number :min="0.001" :max="10000" v-model="item.fqty"></el-input-number>
+                </div>
+                <div>
+                  <label class="vt">特殊要求</label>
+                  <el-input type="textarea" :rows="3" :maxlength="100" placeholder="请填写图纸以外没有注明的安装产品（例如：需要安装智能产品，罗马柱需要切角，顶线需要切割）安装请带齐工具（100字以内）" v-model="item.frequire"></el-input>
+                </div>
+              </div>
+              <div class="item-tools">
+                <div class="color-blue">金额：{{parseFloat((item.famount = (item.fprice||0) * (item.fqty||0) ).toFixed(2))}}元</div>
+                <i class="el-icon-delete" @click="opClick('deleteServiceItem',item.id)"></i>
+              </div>
+            </div>
+          </el-form-item>
+          <el-dialog title="添加图片" :visible.sync="tagData.serviceItem.visible" center :close-on-click-modal="false">
+            <ImgManage v-model="tagData.serviceItem.projectImage" :limit="8">
+              请上传设计/安装图纸，便于师傅更准确的报价
+            </ImgManage>
+            <span slot="footer">
+              <el-button @click="tagData.serviceItem.visible=!1">取 消</el-button>
+              <el-button type="primary" @click="opClick('formatServiceItem')">确 定</el-button>
+            </span>
+          </el-dialog>
+          <div class="service-item">
+            <input type="button" value="添加图片" @click="opClick('showImageDialog')" />
+          </div>
+        </div>
+        <div class="title border-bottom-solid margin-bottom">其他要求</div>
+        <el-form-item label="是否到货：" is-required>
+          <el-col :span="5">
+            <el-select placeholder="货物是否到达物流点" v-model="uiData.fisarrival" class="margin-right">
+              <el-option :key="item.id" :label="item.name" :value="item.id" v-for="item in [{'id':true,'name':'已到'},{'id':false,'name':'未到'}]"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="10" v-if="!uiData.fisarrival">预计到货时间：<el-date-picker v-model="uiData.fexpectedarrivaldate" type="date" placeholder="选择服务日期" class="margin-right"></el-date-picker>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="服务日期：">
+          <el-date-picker v-model="uiData.forderdate" type="date" placeholder="选择服务日期" class="margin-right"></el-date-picker>
+          <span class="color-grey">(希望服务商在此日期上门服务)</span>
+        </el-form-item>
+        <el-form-item label="备注：" prop="fcareful" is-required>
+          <el-input :maxlength="200" class="textarea-big" :rows="4" type="textarea" v-model="uiData.fcareful" placeholder="请详细说明安装注意的细节，比如需要带齐的工具，安装工艺要求等情况，以免师傅准备不足耽误安装进度。（100字以内）"></el-input>
+        </el-form-item>
+        <el-form-item label="紧急联系人" prop="furgentname" is-required>
+          <el-input v-model="uiData.furgentname" placeholder="请输入姓名" class="margin-right"></el-input>
+          电话：　<el-input type="text" v-model.trim="uiData.furgentphone" placeholder="请输入电话"></el-input>
+        </el-form-item>
+        <div class="text-right" v-show="uiData.foffertype.id=='offer_type_01'">
+          <h1 class="color-blue">合计：{{(uiData.fexpectamount= comm.priceSum(uiData.fshippingamount+_.sum(_.map(uiData.fserviceentry,"famount")),2))}}元</h1>
+        </div>
+      </el-form>
+      <div class="text-right btn-panel">
+        <button @click="opClick('save',!1)">保存</button>
+        <button @click="opClick('save',!0)">提交订单</button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import BreadCrumb from '../../../components/breadcrumb';
+import City from '../../../components/city';
+import ImgManage from '../../../components/imagemanage';
+import Radio from '../../../components/radio';
+import {billView as base} from '../../../lib';
+import placeOrderPlugIn from './placeOrderPlugIn';
+import {vueCityDatas} from '../../../services/city-picker.data';
+const billView = {
+	extends: base
+};
+billView.formId = 'ydj_merchantorder';
+billView.plugs = [new placeOrderPlugIn({})];
+billView.mixins = [
+	{
+		methods: {
+			getData(type, data, call) {
+				let t = this;
+				switch (type) {
+					case 'seritemprice':
+						t.axios
+							.post('/list/ydj_seritemprice?operationno=querydata', {
+								filterString: "(fservicetype='" + t.uiData.fservicetype.id + "' and fprofield='" + t.uiData.fprofield.id + "') and  fdealerid='" + t.$store.state.userCtx.platformdealer + "'",
+								pageCount: 1000,
+								pageIndex: 1,
+								loadingOption: {target: '.element-loading'}
+							})
+							.then(res => {
+								let srvData = res.data.operationResult.srvData.data;
+								let seritem = [];
+								for (let i = 0; i < srvData.length; i++) {
+									let item = srvData[i];
+									let tmaterial = {id: item.fmaterial, name: item.fmaterial_fenumitem, price: item.fsellprice, unit: {id: item.funitid, name: item.funitid_fname}, fprofield: {id: item.fprofield}}; //材质
+									let tseritem = seritem.find(o => {
+										return o.id === item.fseritemid;
+									}); //服务项目
+									if (tseritem == null) {
+										seritem.push({id: item.fseritemid, name: item.fseritemid_fname, material: [tmaterial]});
+									} else {
+										tseritem.material.push(tmaterial);
+									}
+								}
+								t.tagData.serviceTypeData = seritem;
+							});
+						break;
+					case 'unit':
+						t.axios
+							.post('/list/ydj_unit?operationno=querydata', {
+								filterString: '',
+								pageCount: 1000,
+								pageIndex: 1,
+								loadingOption: {target: '.element-loading'}
+							})
+							.then(res => {
+								let srvData = res.data.operationResult.srvData.data;
+								t.tagData.unitData = srvData;
+							});
+						break;
+				}
+			},
+			opChange(type, data) {
+				let t = this;
+				switch (type) {
+					case 'itemcategory': //服务信息 服务类目下拉框
+						let material = t.tagData.serviceTypeData
+							.find(o => {
+								return o.id == data.fseritemid.id;
+							})
+							.material.find(o => {
+								return o.id == data.fmaterial.id;
+							});
+						data.fprice = material.price;
+						data.funitid = material.unit.id;
+						data.funitid_fname = material.unit.name;
+						data.famount = material.price;
+						data.fprofieldentry = material.fprofield;
+						break;
+				}
+			},
+			opClick(type, data) {
+				let t = this;
+				switch (type) {
+					case 'intelligence':
+						t.$prompt('', '地址信息', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							inputValue: '',
+							inputPlaceholder: '请在此处粘贴地址相关信息',
+							inputType: 'textarea'
+						})
+							.then(({value}) => {
+								let phone = /((\+?86)|(\(\+86\)))?1[3-9][0-9]{9}/.exec(value);
+								if (phone != null) {
+									t.uiData.fphone = phone[0];
+								}
+								let name = new RegExp('(?<name>[\u4e00-\u9fa5]{2,4})').exec(value).groups['name'];
+								if (name != null) {
+									t.uiData.fname = name;
+								}
+								let area = value.replace(t.uiData.fphone, '').replace(t.uiData.fname, '');
+								area = new RegExp('(?<province>[^省]+省|.+自治区|上海|北京|天津|重庆)(?<city>[^市]+市|.+自治州|市辖区)(?<region>[^县]+县|.+区|.+镇|.+局)(?<address>.*)').exec(area);
+								if (area.groups['province'] != null) {
+									let p = vueCityDatas.find(o => {
+										return o.label.indexOf(area.groups['province'].trim()) > -1;
+									});
+									if (area.groups['city'] != null && p != null) {
+										let c = p.children.find(o => {
+											return o.label.indexOf(area.groups['city'].trim()) > -1;
+										});
+										if (area.groups['region'] != null && c != null) {
+											let a = c.children.find(o => {
+												return o.label.indexOf(area.groups['region'].trim()) > -1;
+											});
+											if (a != null) {
+												t.tagData.city = [p.value, c.value, a.value];
+												t.uiData.fcusaddress = area.groups['address'].trim();
+											}
+										}
+									}
+								}
+							})
+							.catch(() => {});
+						break;
+					case 'deleteServiceItem': //删除服务信息单项
+						t.$confirm('您确定移除该项？', '操作提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						}).then(() => {
+							t.comm.ArrayRemove(t.uiData.fserviceentry, o => {
+								return o.id == data;
+							});
+							t.comm.ArrayRemove(t.tagData.serviceItem.imageslist, o => {
+								return o.id == data;
+							});
+						});
+						break;
+					case 'showImageDialog': //展示服务信息 图片上传框
+						if (t.comm.IsNullOrEmpty(t.uiData.fprofield.id)) {
+							t.$message({
+								message: '请先选择服务类目',
+								type: 'warning'
+							});
+							return;
+						}
+						t.tagData.serviceItem.editItem = data || '';
+						t.tagData.serviceItem.projectImage = t.comm.Odefault(
+							t.tagData.serviceItem.imageslist.find(o => {
+								return o.id === data;
+							}),
+							'data',
+							[]
+						);
+						t.tagData.serviceItem.visible = !0;
+						break;
+					case 'formatServiceItem': //服务明细图片确定按钮
+						let entity = {
+							id: _.map(t.tagData.serviceItem.projectImage, 'id').join(),
+							name: _.map(t.tagData.serviceItem.projectImage, 'name').join(),
+							url: _.map(t.tagData.serviceItem.projectImage, 'url').join()
+						};
+						if (t.comm.IsNullOrEmpty(entity.id)) {
+							t.$message({
+								message: '请至少上传一张图片',
+								type: 'warning'
+							});
+							return false;
+						}
+						t.tagData.serviceItem.visible = !1;
+						if (t.comm.IsNullOrEmpty(t.tagData.serviceItem.editItem)) {
+							let gid = t.comm.Guid();
+							t.tagData.serviceItem.imageslist.push({
+								id: gid,
+								data: t.tagData.serviceItem.projectImage
+							});
+							t.uiData.fserviceentry.push({
+								id: gid,
+								fentityimage: entity,
+								fseritemid: {id: '', name: ''},
+								fmaterial: {id: '', name: ''},
+								fqty: 1,
+								fprice: 0,
+								frequire: '',
+								froomno: {id: '', name: ''}
+							});
+						} else {
+							t.uiData.fserviceentry.find(o => {
+								return o.id === t.tagData.serviceItem.editItem;
+							}).fentityimage = entity;
+							t.tagData.serviceItem.imageslist.find(o => {
+								return o.id === t.tagData.serviceItem.editItem;
+							}).data = t.tagData.serviceItem.projectImage;
+						}
+						break;
+					case 'save': //保存或提交按钮
+						t.$refs['uiData'].validate(valid => {
+							if (!valid) {
+								t.$message({
+									message: '请完善当前订单信息',
+									type: 'warning'
+								});
+								return false;
+							}
+							if (t.uiData.fservicetype.id == 'fres_type_03') {
+								t.uiData.fserviceentry = [
+									{
+										fentityimage: '',
+										fseritemid: {id: '200000000000001026', name: '其它'},
+										fmaterial: {id: 'material_33', name: '其它'},
+										fqty: 1,
+										fprice: 0,
+										famount: 0,
+										frequire: ''
+									}
+								];
+							}
+							if (t.comm.IsNullOrEmpty(t.uiData.fserviceentry)) {
+								t.$message({
+									message: '请至少填写一项服务信息',
+									type: 'warning'
+								});
+								return false;
+							}
+							let pid = t.uiData.fprofield.id.split(',');
+							t.uiData.fprofield_txt = t.uiData.fprofield.name = t._.map(
+								t.tagData.comboStore.fprofield.filter(o => {
+									return pid.indexOf(o.id) > -1;
+								}),
+								'name'
+							).join();
+							t.tagData.isSubmit = data;
+							if (['fres_type_01', 'fres_type_03'].indexOf(t.uiData.fservicetype.id) > -1) {
+								t.uiData.foffertype.id = 'offer_type_02';
+							} else {
+								t.uiData.flogistics = '';
+								t.uiData.flogisticsno = '';
+								t.uiData.fcollectadd = '';
+								t.uiData.fcollectrel = '';
+								t.uiData.fcollectpho = '';
+								t.uiData.fpieces = 0;
+								t.uiData.fshippingamount = 0;
+								t.uiData.fispay = false;
+								t.uiData.felevator = 0;
+							}
+							t.menuItemClick({opcode: 'save', event: 'uiData'});
+						});
+						break;
+					default:
+						break;
+				}
+			}
+		},
+		components: {BreadCrumb, City, ImgManage, Radio},
+		computed: {
+			Profield() {
+				if (!this.comm.IsNullOrEmpty(this.uiData.fprofield)) {
+					return this.uiData.fprofield.id;
+				}
+			},
+			serviceType() {
+				if (!this.comm.IsNullOrEmpty(this.uiData.fservicetype)) {
+					return this.uiData.fservicetype.id;
+				}
+			},
+			city() {
+				return this.tagData.city;
+			}
+		},
+		watch: {
+			city(v) {
+				this.uiData.fprovince = {id: v[0] || ''};
+				this.uiData.fcity = {id: v[1] || ''};
+				this.uiData.fregion = {id: v[2] || ''};
+			},
+			serviceType(v) {
+				if (!this.comm.IsNullOrEmpty(this.tagData.serviceTypeData)) {
+					this.uiData.fprofield.id = '';
+				}
+				this.tagData.serviceTypeData = [];
+				if (['fres_type_01', 'fres_type_03'].indexOf(v) > -1) {
+					this.uiData.foffertype.id = 'offer_type_02';
+					this.tagData.serviceTypeMessage='目前配送类服务只支持“师傅报价”模式，暂不支持“一口价”';
+				}else{
+					this.tagData.serviceTypeMessage='';
+				}
+			},
+			Profield(v) {
+				if (!this.comm.IsNullOrEmpty(v)) {
+					this.getData('seritemprice', v);
+				}
+			}
+		}
+	}
+];
+export default billView;
+</script>
+<style lang="scss">
+.sologo {
+	background-color: #fdf6ec;
+	padding: 10px;
+	color: #e6a23c;
+}
+.placeorder {
+	.radio-round {
+		& > div {
+			margin-right: 50px;
+			& > * {
+				position: relative;
+				height: 60px;
+			}
+			.offer-one {
+				padding-left: 50px;
+				line-height: 60px;
+				&::before {
+					content: '';
+					background-image: url(../../../assets/images/icon.png);
+					background-position: -332px -115px;
+					width: 42px;
+					height: 40px;
+					display: block;
+					position: absolute;
+					left: 0;
+				}
+			}
+			.offer-two {
+				padding-left: 40px;
+				line-height: 60px;
+				&::before {
+					content: '';
+					background-image: url(../../../assets/images/icon.png);
+					background-position: -294px -111px;
+					width: 27px;
+					height: 55px;
+					display: block;
+					position: absolute;
+					left: 0;
+				}
+			}
+		}
+	}
+	.serviceicon {
+		& > * {
+			width: 120px;
+		}
+	}
+	.service-icon {
+		.icon-profield-0 {
+			background-position: -146px -234px;
+		}
+		.icon-profield-1 {
+			background-position: -226px -234px;
+		}
+		.icon-profield-2 {
+			background-position: -306px -234px;
+		}
+		.icon-profield-3 {
+			background-position: -386px -234px;
+		}
+		.icon-profield-4 {
+			background-position: -466px -234px;
+		}
+		.icon {
+			width: 70px;
+			height: 70px;
+			display: block;
+			margin: 20px auto 0 auto;
+		}
+	}
+	.intelligence {
+		background-color: #fff;
+		border: 1px solid #ff6d22;
+		color: #ff6d22;
+		line-height: 22px;
+		padding: 5px 12px;
+		border-radius: 18px;
+		& > i {
+			vertical-align: middle;
+			margin-right: 5px;
+		}
+	}
+	.el-from-lable-vertical {
+		position: relative;
+		padding-left: 100px;
+		margin-bottom: 22px;
+		&::before {
+			content: attr(label);
+			display: block;
+			width: 88px;
+			height: 40px;
+			line-height: 40px;
+			text-align: right;
+			position: absolute;
+			padding-right: 12px;
+			left: 0;
+			top: 50%;
+			margin-top: -20px;
+			color: #606266;
+		}
+	}
+	.city_box {
+		display: inline-block;
+	}
+	.city_box,
+	.el-select,
+	.el-input {
+		width: 200px;
+	}
+	.input-address {
+		width: 372px;
+	}
+	.i8 {
+		width: 100px;
+		.el-input {
+			width: 100px;
+		}
+	}
+	.form-service-item {
+		.el-form-item__error {
+			top: 80%;
+			left: 20px;
+		}
+	}
+	.service-item {
+		border: 1px solid #e7e7e7;
+		padding: 20px 20px 20px 34px;
+		margin-bottom: 20px;
+		font-size: 0;
+		& > div {
+			display: inline-block;
+			vertical-align: top;
+			font-size: 14px;
+			margin-right: 10px;
+			& > * {
+				margin-bottom: 15px;
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+			label {
+				width: 80px;
+				display: inline-block;
+				padding-right: 14px;
+				text-align: right;
+				&.vt {
+					vertical-align: top;
+					line-height: 32px;
+				}
+				&.unit {
+					width: 48px;
+					padding: 0;
+				}
+			}
+		}
+		.item-tools {
+			padding: 10px 0;
+			font-size: 18px;
+			text-align: right;
+			width: 150px;
+		}
+		.item-tools .el-icon-delete {
+			font-size: 24px;
+			color: #bbbbbb;
+			margin: 20px 15px 0 0;
+		}
+		.el-select,
+		.el-input,
+		.el-input-number {
+			width: 149px;
+		}
+		.input-price {
+			width: 100px;
+			.el-input {
+				width: 100px;
+			}
+		}
+		.el-textarea {
+			width: 455px;
+		}
+
+		.img-panel {
+			width: 80px;
+			height: 80px;
+			box-sizing: content-box;
+			border: 1px solid #e7e7e7;
+			position: relative;
+			&::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 1;
+				width: 0;
+				height: 0;
+				border-top: 26px solid #409eff;
+				border-right: 26px solid transparent;
+			}
+			&::after {
+				content: attr(data-count);
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 2;
+				display: block;
+				color: #fff;
+				font-size: 12px;
+				line-height: 20px;
+				width: 26px;
+				height: 26px;
+				text-indent: 4px;
+				text-align: left;
+			}
+			& > img {
+				width: 80px;
+				height: 80px;
+			}
+		}
+
+		input[type='button'] {
+			width: 80px;
+			height: 34px;
+			box-sizing: border-box;
+			cursor: pointer;
+			background-color: #fff;
+			border: 1px solid #ff6d22;
+			color: #ff6d22;
+			border-radius: 4px;
+			&:hover {
+				background-color: rgba(255, 109, 34, 0.6);
+			}
+		}
+	}
+	.btn-panel {
+		button {
+			width: 128px;
+			height: 45px;
+			color: #fff;
+			border-radius: 4px;
+			background-color: #ff6d22;
+			margin: 15px 0;
+			font-size: 16px;
+			&:hover {
+				opacity: 0.8;
+			}
+		}
+	}
+}
+</style>
