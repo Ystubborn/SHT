@@ -72,6 +72,7 @@ export default {
 			let t = this;
 			t.axios.post('/bill/ydj_merchantorder?operationno=checknewbill', {simpleData: {merchantId: t.$store.state.userCtx.linkIdentity.id}, loadingOption: {target: '.element-loading'}}).then(res => {
 				let reslut = res.data.operationResult.srvData.linkUnclosedBills;
+				console.log(reslut)
 				if (!t.comm.IsNullOrEmpty(reslut.ydj_merchantorder) || !t.comm.IsNullOrEmpty(reslut.ydj_refund) || !t.comm.IsNullOrEmpty(reslut.ydj_servicechange)) {
 					t.publishInit(reslut);
 				} else {

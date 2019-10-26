@@ -131,6 +131,7 @@ export default {
 		});
 		//常见问题数据
 		t.axios.post('/list/ydj_helpcenter.json?operationno=querydata', {filterString: "fispopular=1 and fpublishstatus='send_status_01'", loadingOption: {target: '.element-loading'}, pageSize: 10, pageIndex: 1}).then(res => {
+			console.log("常见问题："+JSON.stringify(res))
 			t.problem = t.comm.Odefault(res.data.operationResult.srvData, 'data');
 		});
 		//其他订单条数数据

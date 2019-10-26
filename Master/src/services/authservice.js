@@ -1,4 +1,3 @@
-
 import axios from './axios';
 import store from '../vuex/global';
 module.exports = {
@@ -6,8 +5,8 @@ module.exports = {
 		var that = this;
 		return axios.post('/auth/credentials', args)
 			.then(res => {
+				console.log(args)
 				args.response = res;
-
 				store.commit('userCtx', {
 					userId: res.data.userId,
 					userName: res.data.userName,
@@ -18,7 +17,6 @@ module.exports = {
 				return axios.post('/dynamic/sys_mainfw?operationno=getsysinfo', {})
 					.then(res2 => {
 						var srvData = res2.data.operationResult.srvData;
-
 						var fileInfo = srvData.fileServerInfo;
 						//自动补全 fsApiUrl 最后的斜杠
 						if (fileInfo && fileInfo.fsApiUrl) {
