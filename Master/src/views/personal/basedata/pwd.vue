@@ -62,7 +62,7 @@ export default {
 					return false;
 				}
 				t.axios
-					.post('/dynamic/sys_mainfw?operationno=modifypwd', {simpleData: t.simpleData})
+					.post('/dynamic/sys_mainfw?modifypwd', {simpleData: t.simpleData})
 					.then(res => {
 						let mes = res.data.operationResult.simpleMessage;
 						t.$message({
