@@ -218,6 +218,7 @@ export default class placeOrderPlugIn extends shtBillPlugIn {
 	onRefresh(args) {
 		let t = this;
 		let linkIdentity = t.$store.state.userCtx.linkIdentity
+		console.log(linkIdentity)
 		if (linkIdentity) {
 			if (t.uiData.fmerchantid) {
 				t.uiData.fmerchantid.id = linkIdentity.id || '';
